@@ -1,0 +1,8 @@
+/* UI convenience gate only. This is not server-side authentication. */
+'use strict';
+function unlockCanvas(){document.body.classList.remove('locked');document.getElementById('gate').hidden=true;document.getElementById('gatePassword').value='';requestAnimationFrame(()=>{if(typeof chartData!=='undefined'&&chartData&&window.Plotly)window.Plotly.Plots.resize('plot');else if(typeof fit==='function')fit();});}
+function lockCanvas(){try{sessionStorage.removeItem('visual-gate-session');}catch{}document.body.classList.add('locked');document.getElementById('gate').hidden=false;document.getElementById('gateMessage').textContent='';document.getElementById('gatePassword').focus();}
+async function passwordHash(password){const bytes=new TextEncoder().encode(window.VISUAL_GATE.salt+':'+password),result=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(result),b=>b.toString(16).padStart(2,'0')).join('');}
+document.getElementById('gateForm').onsubmit=async e=>{e.preventDefault();const button=document.getElementById('gateEnter');button.disabled=true;try{const hash=await passwordHash(document.getElementById('gatePassword').value);if(hash===window.VISUAL_GATE.hash){try{sessionStorage.setItem('visual-gate-session',hash);}catch{}unlockCanvas();}else document.getElementById('gateMessage').textContent='密碼不正確，請再試一次。';}catch{document.getElementById('gateMessage').textContent='密碼介面需要支援 Web Crypto 的瀏覽器，請使用 HTTPS 網址開啟。';}finally{button.disabled=false;}};
+document.getElementById('lockApp').onclick=lockCanvas;
+try{if(sessionStorage.getItem('visual-gate-session')===window.VISUAL_GATE.hash)unlockCanvas();}catch{}
