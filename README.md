@@ -54,3 +54,13 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 換密碼：在本機專案執行 `node tools/set-password.cjs`，依提示輸入新密碼，提交 gate-config.js 並重新部署。該簡單腳本的終端輸入可能可見。
 
 無 AI API、無模型推論；資料處理、雜湊與繪圖均在訪客瀏覽器執行。網站仍需要靜態代管與網路流量，費用依代管服務方案。
+
+## 研究與報告工作室（獨立擴充）
+
+主頁「研究與報告工作室」或直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site/extensions/research-studio/index.html 。沿用原本密碼。
+
+獨立資料夾：`extensions/research-studio/`，14 種 ECharts／Mermaid 架構，涵蓋誤差棒、森林、啞鈴、管制、柏拉、知識關係網、階層樹、日曆熱力、流程、循序、甘特、狀態、類別與實體關係圖。原 30 種格式與操作保留。
+
+提供學術藍橙、商務低彩度與黑白列印，輸出含圖說及資料來源的 SVG、3× 像素 PNG。風格與選圖說明、第三方授權及限制見擴充資料夾 README/THIRD_PARTY。主程式的外觀層位於 `extensions/professional.css` 與 `extensions/professional.js`，可移除引入來回復原有樣式。
+
+本次驗證包含 14 個範例、3 套風格、誤差區間幾何、柏拉圖累積比例、5 個無效輸入案例及舊功能回歸。尚未進行實際瀏覽器視覺與匯出驗證。
