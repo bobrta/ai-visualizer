@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "title": "管理學：管理職能",
+  "root": {
+    "id": "management",
+    "label": "管理職能",
+    "description": "示範資料，非你的講義內容。",
+    "sources": [],
+    "children": [
+      {
+        "id": "planning",
+        "label": "規劃",
+        "description": "設定目標與方法。",
+        "sources": [],
+        "children": []
+      },
+      {
+        "id": "organizing",
+        "label": "組織",
+        "description": "分配任務與資源。",
+        "sources": [],
+        "children": []
+      },
+      {
+        "id": "leading",
+        "label": "領導",
+        "description": "溝通與引導成員。",
+        "sources": [],
+        "children": []
+      },
+      {
+        "id": "controlling",
+        "label": "控制",
+        "description": "比較成果並修正。",
+        "sources": [],
+        "children": []
+      }
+    ]
+  }
+}
