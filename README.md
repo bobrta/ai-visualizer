@@ -4,7 +4,7 @@
 
 ## 線上使用
 
-直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site 。目前為擁有者私人網站，可能需要登入同一個 ChatGPT 帳號。
+直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site 。網站不需帳號登入，入口採用前端密碼介面。密碼另行提供，不在 README 公開。
 
 點「選擇指令架構」挑選 30 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
 
@@ -44,3 +44,13 @@ JavaScript 語法、30 個架構按鈕與表單路由模擬、新舊心智圖格
 Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https://plotly.com/javascript/3d-charts/。
 
 目前不支援 XMind 檔案匯出、節點自由拖曳與 Excel 公式計算。資料表模式用於顯示資料。
+
+## 密碼介面與開源
+
+本專案自有程式使用 MIT 授權（見 LICENSE）。Plotly 為獨立第三方依賴，其授權依官方版本。GitHub repository 必須設定為 Public 才能公開供他人瀏覽；授權檔不會自動改變可見性。
+
+密碼介面只用於一般瀏覽的便利限制，不是安全驗證：前端資產仍可下載，懂技術的人可繞過或離線猜測密碼，不能用來保護機密資料。gate-config.js 保存隨機 salt 與 SHA-256 摘要，不保存明文密碼。
+
+換密碼：在本機專案執行 `node tools/set-password.cjs`，依提示輸入新密碼，提交 gate-config.js 並重新部署。該簡單腳本的終端輸入可能可見。
+
+無 AI API、無模型推論；資料處理、雜湊與繪圖均在訪客瀏覽器執行。網站仍需要靜態代管與網路流量，費用依代管服務方案。
