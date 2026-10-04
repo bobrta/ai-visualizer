@@ -64,3 +64,9 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 提供學術藍橙、商務低彩度與黑白列印，輸出含圖說及資料來源的 SVG、3× 像素 PNG。風格與選圖說明、第三方授權及限制見擴充資料夾 README/THIRD_PARTY。主程式的外觀層位於 `extensions/professional.css` 與 `extensions/professional.js`，可移除引入來回復原有樣式。
 
 本次驗證包含 14 個範例、3 套風格、誤差區間幾何、柏拉圖累積比例、5 個無效輸入案例及舊功能回歸。尚未進行實際瀏覽器視覺與匯出驗證。
+
+## 20 色、黑白底與思考筆記
+
+兩個工作台新增 20 個可點主色與黑／白背景；主工作台可選 SVG 或 PNG。研究工作室另外加入 16 個思考圖與筆記架構，獨立於主程式，總計 30 個研究／思考架構。
+
+如何在 GitHub Pages 上發布，以及 SVG、PNG、JSON、PDF 的下載方式，請見 [DOWNLOAD_GUIDE.md](DOWNLOAD_GUIDE.md)。目前 Sites 網址不是 GitHub Pages 網址；Pages 是否啟用請以 Settings → Pages 顯示為準。
