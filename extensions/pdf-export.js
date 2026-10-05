@@ -1,9 +1,9 @@
 'use strict';
-window.VCPdfExport = async function ({ title = 'Visual Canvas 圖表', subtitle = '', image, caption = '', source = '', showTitle = true } = {}) {
+window.VCPdfExport = async function ({ title = 'Visual Canvas 圖表', subtitle = '', image, caption = '', source = '', showTitle = true, targetWindow = null } = {}) {
   if (typeof image !== 'string' || !/^data:image\/(svg\+xml|png);/i.test(image)) {
     throw new Error('無法建立 PDF 圖形，請先產生圖表後重試。');
   }
-  const win = window.open('', '_blank');
+  const win = targetWindow || window.open('', '_blank');
   if (!win) throw new Error('瀏覽器封鎖了 PDF 視窗，請允許此網站開啟彈出視窗後重試。');
   const doc = win.document;
   doc.open();
