@@ -1,6 +1,6 @@
-# 50 種指令格式
+# 70 種指令格式
 
-App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-50.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
+App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-70.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
 
 ## 心智圖 (`mindmap`)
 
@@ -1655,3 +1655,744 @@ App 選擇類型後按「範例」即可載入對應指令。不要把整份 cha
 ```
 
 新增圖表的驗證規則與操作限制，見 [學習圖表說明](extensions/learning-charts/README.md)。
+
+# 流程與時間圖（51–70）
+
+## 51. 分工泳道圖｜學習範例
+
+```json
+{
+  "type": "swimlane",
+  "title": "分工泳道圖｜學習範例",
+  "lanes": [
+    "學生",
+    "工具",
+    "老師"
+  ],
+  "steps": [
+    {
+      "id": "a",
+      "title": "預習",
+      "lane": 0
+    },
+    {
+      "id": "b",
+      "title": "整理知識圖",
+      "lane": 1
+    },
+    {
+      "id": "c",
+      "title": "解題找卡點",
+      "lane": 0
+    },
+    {
+      "id": "d",
+      "title": "釐清疑問",
+      "lane": 2
+    },
+    {
+      "id": "e",
+      "title": "回想與修正",
+      "lane": 0
+    }
+  ],
+  "links": [
+    {
+      "from": "a",
+      "to": "b"
+    },
+    {
+      "from": "b",
+      "to": "c"
+    },
+    {
+      "from": "c",
+      "to": "d"
+    },
+    {
+      "from": "d",
+      "to": "e"
+    }
+  ]
+}
+```
+
+## 52. 互動循序圖｜學習範例
+
+```json
+{
+  "type": "sequence_diagram",
+  "title": "互動循序圖｜學習範例",
+  "participants": [
+    "學生",
+    "工具",
+    "老師"
+  ],
+  "messages": [
+    {
+      "from": 0,
+      "to": 1,
+      "text": "整理講義"
+    },
+    {
+      "from": 1,
+      "to": 0,
+      "text": "呈現結構"
+    },
+    {
+      "from": 0,
+      "to": 2,
+      "text": "詢問疑問"
+    },
+    {
+      "from": 2,
+      "to": 0,
+      "text": "說明與示例"
+    }
+  ]
+}
+```
+
+## 53. 狀態轉移圖｜學習範例
+
+```json
+{
+  "type": "state_machine",
+  "title": "狀態轉移圖｜學習範例",
+  "nodes": [
+    {
+      "id": "a",
+      "title": "待學"
+    },
+    {
+      "id": "b",
+      "title": "練習中"
+    },
+    {
+      "id": "c",
+      "title": "需複習"
+    },
+    {
+      "id": "d",
+      "title": "能獨立解題"
+    }
+  ],
+  "relations": [
+    {
+      "from": "a",
+      "to": "b",
+      "label": "開始"
+    },
+    {
+      "from": "b",
+      "to": "c",
+      "label": "未通過"
+    },
+    {
+      "from": "c",
+      "to": "b",
+      "label": "補強"
+    },
+    {
+      "from": "b",
+      "to": "d",
+      "label": "通過"
+    },
+    {
+      "from": "d",
+      "to": "c",
+      "label": "回想失敗"
+    }
+  ]
+}
+```
+
+## 54. 多分支流程圖｜學習範例
+
+```json
+{
+  "type": "branching_flow",
+  "title": "多分支流程圖｜學習範例",
+  "nodes": [
+    {
+      "id": "a",
+      "title": "辨認題型",
+      "level": 0
+    },
+    {
+      "id": "b",
+      "title": "基本導數",
+      "level": 1
+    },
+    {
+      "id": "c",
+      "title": "鏈鎖律",
+      "level": 1
+    },
+    {
+      "id": "d",
+      "title": "乘積律",
+      "level": 1
+    },
+    {
+      "id": "e",
+      "title": "檢查答案",
+      "level": 2
+    }
+  ],
+  "relations": [
+    {
+      "from": "a",
+      "to": "b",
+      "label": "單一函數"
+    },
+    {
+      "from": "a",
+      "to": "c",
+      "label": "複合函數"
+    },
+    {
+      "from": "a",
+      "to": "d",
+      "label": "函數相乘"
+    },
+    {
+      "from": "b",
+      "to": "e",
+      "label": "計算後"
+    },
+    {
+      "from": "c",
+      "to": "e",
+      "label": "計算後"
+    },
+    {
+      "from": "d",
+      "to": "e",
+      "label": "計算後"
+    }
+  ]
+}
+```
+
+## 55. 並行流程圖｜學習範例
+
+```json
+{
+  "type": "parallel_flow",
+  "title": "並行流程圖｜學習範例",
+  "stages": [
+    {
+      "title": "開始整理",
+      "tasks": [
+        "確認章節目標"
+      ]
+    },
+    {
+      "title": "分組處理",
+      "tasks": [
+        "整理定義",
+        "整理例題",
+        "整理錯題"
+      ]
+    },
+    {
+      "title": "合併成果",
+      "tasks": [
+        "交叉檢查來源"
+      ]
+    },
+    {
+      "title": "完成",
+      "tasks": [
+        "回想測驗"
+      ]
+    }
+  ]
+}
+```
+
+## 56. 迴圈檢核流程｜學習範例
+
+```json
+{
+  "type": "loop_flow",
+  "title": "迴圈檢核流程｜學習範例",
+  "steps": [
+    {
+      "title": "閱讀題目"
+    },
+    {
+      "title": "獨立解題"
+    },
+    {
+      "title": "檢查答案"
+    },
+    {
+      "title": "紀錄解法"
+    }
+  ],
+  "repeat_from": 2,
+  "repeat_to": 1,
+  "repeat_label": "未通過：補強後再試"
+}
+```
+
+## 57. 輸入－處理－輸出圖｜學習範例
+
+```json
+{
+  "type": "input_output_flow",
+  "title": "輸入－處理－輸出圖｜學習範例",
+  "inputs": [
+    "講義",
+    "課本例題",
+    "課堂疑問"
+  ],
+  "process": "整理、解釋與獨立練習",
+  "outputs": [
+    "知識圖",
+    "錯題清單",
+    "自己的解釋"
+  ]
+}
+```
+
+## 58. 學習資料流圖｜學習範例
+
+```json
+{
+  "type": "data_flow",
+  "title": "學習資料流圖｜學習範例",
+  "entities": [
+    {
+      "id": "a",
+      "title": "課本"
+    },
+    {
+      "id": "b",
+      "title": "老師"
+    }
+  ],
+  "processes": [
+    {
+      "id": "c",
+      "title": "整理重點"
+    },
+    {
+      "id": "d",
+      "title": "檢查理解"
+    }
+  ],
+  "stores": [
+    {
+      "id": "e",
+      "title": "知識單元"
+    },
+    {
+      "id": "f",
+      "title": "錯題紀錄"
+    }
+  ],
+  "flows": [
+    {
+      "from": "a",
+      "to": "c",
+      "label": "章節內容"
+    },
+    {
+      "from": "b",
+      "to": "d",
+      "label": "回饋"
+    },
+    {
+      "from": "c",
+      "to": "e",
+      "label": "結構筆記"
+    },
+    {
+      "from": "e",
+      "to": "d",
+      "label": "提取題目"
+    },
+    {
+      "from": "d",
+      "to": "f",
+      "label": "錯誤與修正"
+    }
+  ]
+}
+```
+
+## 59. 學習篩選流程｜學習範例
+
+```json
+{
+  "type": "funnel_process",
+  "title": "學習篩選流程｜學習範例",
+  "steps": [
+    {
+      "title": "全部練習題",
+      "count": 40
+    },
+    {
+      "title": "做錯或不熟",
+      "count": 18
+    },
+    {
+      "title": "補強後仍不熟",
+      "count": 6
+    },
+    {
+      "title": "需要詢問",
+      "count": 2
+    }
+  ],
+  "unit": "題"
+}
+```
+
+## 60. 學習時間流程圖｜學習範例
+
+```json
+{
+  "type": "value_stream",
+  "title": "學習時間流程圖｜學習範例",
+  "steps": [
+    {
+      "title": "找資料",
+      "process_minutes": 10,
+      "wait_minutes": 5
+    },
+    {
+      "title": "整理結構",
+      "process_minutes": 20,
+      "wait_minutes": 0
+    },
+    {
+      "title": "解題",
+      "process_minutes": 30,
+      "wait_minutes": 0
+    },
+    {
+      "title": "取得回饋",
+      "process_minutes": 10,
+      "wait_minutes": 15
+    }
+  ]
+}
+```
+
+## 61. 月學習日曆圖｜學習範例
+
+```json
+{
+  "type": "study_calendar",
+  "title": "月學習日曆圖｜學習範例",
+  "month": "2026-10",
+  "entries": [
+    {
+      "date": "2026-10-01",
+      "value": 30,
+      "note": "極限"
+    },
+    {
+      "date": "2026-10-03",
+      "value": 45,
+      "note": "導數"
+    },
+    {
+      "date": "2026-10-06",
+      "value": 20,
+      "note": "錯題複習"
+    },
+    {
+      "date": "2026-10-12",
+      "value": 60,
+      "note": "混合練習"
+    }
+  ],
+  "unit": "分鐘"
+}
+```
+
+## 62. 每週時間課表｜學習範例
+
+```json
+{
+  "type": "weekly_timetable",
+  "title": "每週時間課表｜學習範例",
+  "blocks": [
+    {
+      "day": 0,
+      "start": 9,
+      "end": 11,
+      "title": "微積分"
+    },
+    {
+      "day": 1,
+      "start": 14,
+      "end": 16,
+      "title": "管理學"
+    },
+    {
+      "day": 2,
+      "start": 10,
+      "end": 12,
+      "title": "計概"
+    },
+    {
+      "day": 4,
+      "start": 15,
+      "end": 17,
+      "title": "整理錯題"
+    }
+  ]
+}
+```
+
+## 63. 每日時間塊圖｜學習範例
+
+```json
+{
+  "type": "daily_timeblocks",
+  "title": "每日時間塊圖｜學習範例",
+  "blocks": [
+    {
+      "title": "預習",
+      "start": 8,
+      "end": 9
+    },
+    {
+      "title": "上課",
+      "start": 9.5,
+      "end": 11.5
+    },
+    {
+      "title": "解題",
+      "start": 14,
+      "end": 15.5
+    },
+    {
+      "title": "回想",
+      "start": 19,
+      "end": 19.5
+    }
+  ],
+  "unit": "時（24 小時制）"
+}
+```
+
+## 64. 日期里程碑圖｜學習範例
+
+```json
+{
+  "type": "milestone_timeline",
+  "title": "日期里程碑圖｜學習範例",
+  "milestones": [
+    {
+      "date": "2026-10-07",
+      "title": "完成章節預習"
+    },
+    {
+      "date": "2026-10-14",
+      "title": "完成基礎題"
+    },
+    {
+      "date": "2026-10-24",
+      "title": "混合練習檢核"
+    },
+    {
+      "date": "2026-11-07",
+      "title": "考試"
+    }
+  ]
+}
+```
+
+## 65. 複習日期時間軸｜學習範例
+
+```json
+{
+  "type": "review_timeline",
+  "title": "複習日期時間軸｜學習範例",
+  "sessions": [
+    {
+      "date": "2026-10-07",
+      "topic": "極限",
+      "status": "done"
+    },
+    {
+      "date": "2026-10-08",
+      "topic": "導數",
+      "status": "planned"
+    },
+    {
+      "date": "2026-10-10",
+      "topic": "極限",
+      "status": "planned"
+    },
+    {
+      "date": "2026-10-15",
+      "topic": "導數",
+      "status": "planned"
+    }
+  ]
+}
+```
+
+## 66. 考前倒數排程｜學習範例
+
+```json
+{
+  "type": "countdown_plan",
+  "title": "考前倒數排程｜學習範例",
+  "exam_date": "2026-11-07",
+  "tasks": [
+    {
+      "title": "補齊觀念",
+      "days_before": 14,
+      "duration": 5
+    },
+    {
+      "title": "題庫練習",
+      "days_before": 9,
+      "duration": 4
+    },
+    {
+      "title": "錯題補強",
+      "days_before": 5,
+      "duration": 3
+    },
+    {
+      "title": "輕量回想",
+      "days_before": 2,
+      "duration": 1
+    }
+  ]
+}
+```
+
+## 67. 學習耗時比較圖｜學習範例
+
+```json
+{
+  "type": "duration_comparison",
+  "title": "學習耗時比較圖｜學習範例",
+  "tasks": [
+    {
+      "title": "預習",
+      "minutes": 25
+    },
+    {
+      "title": "解題",
+      "minutes": 45
+    },
+    {
+      "title": "錯題整理",
+      "minutes": 20
+    },
+    {
+      "title": "回想",
+      "minutes": 15
+    }
+  ]
+}
+```
+
+## 68. 累積學習時間圖｜學習範例
+
+```json
+{
+  "type": "cumulative_study",
+  "title": "累積學習時間圖｜學習範例",
+  "sessions": [
+    {
+      "date": "2026-10-01",
+      "minutes": 30
+    },
+    {
+      "date": "2026-10-02",
+      "minutes": 45
+    },
+    {
+      "date": "2026-10-04",
+      "minutes": 20
+    },
+    {
+      "date": "2026-10-06",
+      "minutes": 50
+    }
+  ]
+}
+```
+
+## 69. 學習時間分配圖｜學習範例
+
+```json
+{
+  "type": "time_distribution",
+  "title": "學習時間分配圖｜學習範例",
+  "labels": [
+    "預習",
+    "上課",
+    "解題",
+    "回想",
+    "錯題整理"
+  ],
+  "minutes": [
+    30,
+    120,
+    60,
+    20,
+    25
+  ]
+}
+```
+
+## 70. 任務依賴排程圖｜學習範例
+
+```json
+{
+  "type": "schedule_dependencies",
+  "title": "任務依賴排程圖｜學習範例",
+  "tasks": [
+    {
+      "id": "a",
+      "title": "整理概念",
+      "start": 0,
+      "duration": 2,
+      "depends": []
+    },
+    {
+      "id": "b",
+      "title": "基本練習",
+      "start": 2,
+      "duration": 3,
+      "depends": [
+        "a"
+      ]
+    },
+    {
+      "id": "c",
+      "title": "易錯點整理",
+      "start": 2,
+      "duration": 2,
+      "depends": [
+        "a"
+      ]
+    },
+    {
+      "id": "d",
+      "title": "混合測驗",
+      "start": 5,
+      "duration": 2,
+      "depends": [
+        "b",
+        "c"
+      ]
+    }
+  ],
+  "unit": "天"
+}
+```
