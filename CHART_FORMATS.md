@@ -1,6 +1,6 @@
-# 82 種指令格式
+# 90 種指令格式
 
-App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-82.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
+App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-90.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
 
 ## 心智圖 (`mindmap`)
 
@@ -2698,5 +2698,173 @@ App 選擇類型後按「範例」即可載入對應指令。不要把整份 cha
   "unit": "mm",
   "bins": 10,
   "within_sigma": 0
+}
+```
+
+# 工業工程計算與時間計畫（83–90）
+
+## 83. 勞動生產力比較｜合成範例
+
+```json
+{
+  "type": "labor_productivity",
+  "title": "勞動生產力比較｜合成範例",
+  "periods": [
+    {
+      "title": "改善前",
+      "output": 480,
+      "workers": 4,
+      "hours": 8
+    },
+    {
+      "title": "改善後",
+      "output": 600,
+      "workers": 4,
+      "hours": 8
+    }
+  ],
+  "output_unit": "件"
+}
+```
+
+## 84. OEE 設備綜合效率｜合成範例
+
+```json
+{
+  "type": "oee_calculator",
+  "title": "OEE 設備綜合效率｜合成範例",
+  "planned_minutes": 480,
+  "stop_minutes": 60,
+  "ideal_cycle_seconds": 30,
+  "total_count": 700,
+  "good_count": 665
+}
+```
+
+## 85. 產線平衡效率｜合成範例
+
+```json
+{
+  "type": "line_balance_efficiency",
+  "title": "產線平衡效率｜合成範例",
+  "station_seconds": [
+    45,
+    50,
+    40,
+    55
+  ],
+  "cycle_seconds": 60
+}
+```
+
+## 86. 效率與效能比較｜合成範例
+
+```json
+{
+  "type": "efficiency_effectiveness",
+  "title": "效率與效能比較｜合成範例",
+  "planned_input": 40,
+  "actual_input": 36,
+  "planned_output": 100,
+  "actual_output": 90,
+  "input_unit": "人時",
+  "output_unit": "件"
+}
+```
+
+## 87. 需求節拍與週期比較｜合成範例
+
+```json
+{
+  "type": "takt_time_calculator",
+  "title": "需求節拍與週期比較｜合成範例",
+  "net_minutes": 420,
+  "demand": 360,
+  "actual_cycle_seconds": 65
+}
+```
+
+## 88. 工作量與總時間估算｜合成範例
+
+```json
+{
+  "type": "workload_time_estimate",
+  "title": "工作量與總時間估算｜合成範例",
+  "tasks": [
+    {
+      "title": "閱讀講義",
+      "minutes_each": 25,
+      "repetitions": 4
+    },
+    {
+      "title": "解題",
+      "minutes_each": 8,
+      "repetitions": 12
+    },
+    {
+      "title": "整理報告",
+      "minutes_each": 45,
+      "repetitions": 1
+    }
+  ],
+  "setup_minutes": 15,
+  "buffer_percent": 15
+}
+```
+
+## 89. 產能負荷與缺口｜合成範例
+
+```json
+{
+  "type": "capacity_load",
+  "title": "產能負荷與缺口｜合成範例",
+  "jobs": [
+    {
+      "title": "產品 A",
+      "quantity": 50,
+      "minutes_per_unit": 4
+    },
+    {
+      "title": "產品 B",
+      "quantity": 30,
+      "minutes_per_unit": 6
+    }
+  ],
+  "available_minutes": 360
+}
+```
+
+## 90. 工作日計畫日曆｜合成範例
+
+```json
+{
+  "type": "workday_calendar_plan",
+  "title": "工作日計畫日曆｜合成範例",
+  "start_date": "2026-10-09",
+  "daily_minutes": 120,
+  "workdays": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "excluded_dates": [
+    "2026-10-12"
+  ],
+  "tasks": [
+    {
+      "title": "需求訪談整理",
+      "minutes": 180
+    },
+    {
+      "title": "原型製作",
+      "minutes": 240
+    },
+    {
+      "title": "測試與報告",
+      "minutes": 210
+    }
+  ]
 }
 ```
