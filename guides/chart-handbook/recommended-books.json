@@ -1,0 +1,32 @@
+[
+  {
+    "title": "金字塔原理：思考、寫作、解決問題的邏輯方法",
+    "author": "芭芭拉．明托（Barbara Minto）",
+    "use": "先寫核心結論，再用理由與證據支撐；搭配金字塔、論證圖、SCQA。",
+    "url": "https://www.cite.com.tw/book?id=12661"
+  },
+  {
+    "title": "Storytelling with Data: A Data Visualization Guide for Business Professionals",
+    "author": "Cole Nussbaumer Knaflic",
+    "use": "選圖、刪除干擾、用色與圖說；搭配折線、長條、柏拉圖。",
+    "url": "https://www.storytellingwithdata.com/books"
+  },
+  {
+    "title": "子彈思考整理術",
+    "author": "瑞德・卡洛（Ryder Carroll）",
+    "use": "任務整理、回顧與追蹤；搭配日曆、每日時間預算、複習時間軸。",
+    "url": "https://books.cw.com.tw/book/245"
+  },
+  {
+    "title": "Business Model Generation",
+    "author": "Alexander Osterwalder、Yves Pigneur",
+    "use": "整理商業模式假設；搭配 BMC、SWOT、TOWS，再用實際訪談驗證。",
+    "url": "https://www.strategyzer.com/library/business-model-generation"
+  },
+  {
+    "title": "NIST/SEMATECH e-Handbook of Statistical Methods",
+    "author": "NIST／SEMATECH（免費線上手冊）",
+    "use": "查核統計與製程能力的前提；搭配散佈、直方、箱形、製程能力圖。",
+    "url": "https://www.itl.nist.gov/div898/handbook/"
+  }
+]

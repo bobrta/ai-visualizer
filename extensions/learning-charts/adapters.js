@@ -62,7 +62,19 @@ chartConfig=function(d){
  }else if(t==='venn'){
   shapes.push(...[-160,160].map((x,i)=>({type:'circle',x0:x-310,x1:x+310,y0:-250,y1:250,line:{color:C(i),width:3},fillcolor:C(i),opacity:.12,layer:'below'})));d.sets.forEach((s,i)=>label(i===0?-280:280,0,s.title+'\n'+s.items.join('\n'),C(i),16,220));label(0,0,'交集\n'+d.intersection.join('\n'),st.fg,14,180);bound(0,0,980,520);
  }else if(t==='quadrant'){
-  rule(0,0,0,100,st.muted);rule(0,100,100,100,st.muted);rule(50,0,50,100);rule(0,50,100,50);const qs=[[25,4],[75,4],[25,96],[75,96]];qs.forEach(([x,y],i)=>annotations.push({x,y,text:escape(d.quadrants[i]),showarrow:false,font:{color:st.muted,size:12}}));traces.push({type:'scatter',mode:'markers+text',x:d.points.map(p=>p.x),y:d.points.map(p=>100-p.y),text:d.points.map(p=>escape(p.title)),textposition:'top center',marker:{size:12},customdata:d.points.map(p=>escape(p.description||p.title)),hovertemplate:'%{text}<br>%{customdata}<extra></extra>'});bound(50,50,120,120);annotations.push({x:50,y:112,text:escape(d.x_label),showarrow:false},{x:-12,y:50,text:escape(d.y_label),textangle:-90,showarrow:false});
+  const positions=[[0,50],[50,50],[0,0],[50,0]],quad=i=>(d.points[i].y>=50?0:2)+(d.points[i].x>=50?1:0);
+  positions.forEach(([x,y],i)=>{shapes.push({type:'rect',x0:x,x1:x+50,y0:y,y1:y+50,fillcolor:C(i),opacity:st.background==='black'?.13:.055,line:{width:0},layer:'below'});});
+  shapes.push({type:'line',x0:50,x1:50,y0:0,y1:100,line:{color:st.muted,width:1.5,dash:'dash'},layer:'below'},{type:'line',x0:0,x1:100,y0:50,y1:50,line:{color:st.muted,width:1.5,dash:'dash'},layer:'below'});
+  // Headings live above/below the chart, separate from point labels and axis titles.
+  const headings=[[.175,1.06],[.525,1.06],[.175,-.12],[.525,-.12]];
+  headings.forEach(([x,y],i)=>annotations.push({xref:'paper',yref:'paper',x,y,text:'<b>'+lines(d.quadrants[i],12)+'</b>',showarrow:false,xanchor:'center',font:{size:13,color:C(i)},bgcolor:st.surface,borderpad:5}));
+  // Points use numbered markers. Full names move to a separate, wrapped key;
+  // close or identical coordinates stay legible in the key instead of colliding.
+  traces.push({type:'scatter',mode:'markers+text',x:d.points.map(p=>p.x),y:d.points.map(p=>p.y),text:d.points.map((_,i)=>String(i+1)),textposition:'middle center',textfont:{size:11,color:VCStyle.inkOn(C(0))},marker:{size:24,color:C(0),line:{color:st.bg,width:2}},customdata:d.points.map((p,i)=>[escape(p.title),escape(p.description||''),escape(d.quadrants[quad(i)])]),hovertemplate:'<b>%{customdata[0]}</b><br>%{customdata[2]}<br>X: %{x} / Y: %{y}<br>%{customdata[1]}<extra></extra>'});
+  annotations.push({xref:'paper',yref:'paper',x:.75,y:1,xanchor:'left',yanchor:'top',text:'<b>項目索引</b>',showarrow:false,font:{size:13,color:st.fg}});
+  d.points.slice(0,16).forEach((p,i)=>annotations.push({xref:'paper',yref:'paper',x:.75,y:.93-i*(.88/Math.max(6,Math.min(16,d.points.length))),xanchor:'left',yanchor:'top',align:'left',text:'<b>'+String(i+1).padStart(2,'0')+'</b>　'+lines(Array.from(p.title).slice(0,26).join('')+(p.title.length>26?'…':''),13),showarrow:false,font:{size:d.points.length>16?10:12,color:st.fg},hovertext:escape(p.description||p.title),captureevents:true}));
+  if(d.points.length>16)annotations.push({xref:'paper',yref:'paper',x:.75,y:-.02,xanchor:'left',text:'另有 '+(d.points.length-16)+' 項；移到資料點查看名稱。',showarrow:false,font:{size:10,color:st.muted}});
+  return {traces,layout:{title:{text:escape(d.title)},annotations,shapes,showlegend:false,dragmode:'pan',hovermode:'closest',xaxis:{visible:true,domain:[0,.70],range:[-3,103],tickvals:[0,25,50,75,100],showgrid:false,zeroline:false,title:{text:escape(d.x_label),standoff:62}},yaxis:{visible:true,range:[-3,103],tickvals:[0,25,50,75,100],showgrid:false,zeroline:false,title:{text:escape(d.y_label),standoff:14}},margin:{t:115,l:85,r:35,b:125}}};
  }else if(t==='timeline'){
   d.events.forEach((e,i)=>{const b=box(i*300,i%2?200:-200,e.date,e.title+(e.description?'\n'+e.description:''),i,240);rule(i*300,0,i*300,b.y-Math.sign(b.y)*b.h/2,C(i));});rule(0,0,(d.events.length-1)*300,0,st.muted,3);
  }else if(t==='pyramid'){

@@ -1,6 +1,6 @@
-# 90 種指令格式
+# 100 種指令格式
 
-App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-90.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
+App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-100.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
 
 ## 心智圖 (`mindmap`)
 
@@ -2866,5 +2866,254 @@ App 選擇類型後按「範例」即可載入對應指令。不要把整份 cha
       "minutes": 210
     }
   ]
+}
+```
+
+# 商業時間工具（91–100）
+
+## 91. 重要／緊急優先矩陣｜合成範例
+
+```json
+{
+  "type": "priority_eisenhower",
+  "title": "重要／緊急優先矩陣｜合成範例",
+  "points": [
+    {
+      "title": "明天繳交的報告",
+      "x": 90,
+      "y": 90
+    },
+    {
+      "title": "下週概念複習",
+      "x": 25,
+      "y": 85
+    },
+    {
+      "title": "不重要的臨時請求",
+      "x": 85,
+      "y": 20
+    },
+    {
+      "title": "無目的瀏覽",
+      "x": 20,
+      "y": 15
+    }
+  ]
+}
+```
+
+## 92. 每日時間預算｜合成範例
+
+```json
+{
+  "type": "time_budget",
+  "title": "每日時間預算｜合成範例",
+  "available_minutes": 240,
+  "tasks": [
+    {
+      "title": "課程預習",
+      "minutes": 60
+    },
+    {
+      "title": "解題",
+      "minutes": 90
+    },
+    {
+      "title": "專題",
+      "minutes": 60
+    }
+  ],
+  "reserve_minutes": 30
+}
+```
+
+## 93. 價值／時間排序｜合成範例
+
+```json
+{
+  "type": "priority_value_effort",
+  "title": "價值／時間排序｜合成範例",
+  "tasks": [
+    {
+      "title": "訂正錯題",
+      "value_score": 9,
+      "minutes": 30
+    },
+    {
+      "title": "美化筆記",
+      "value_score": 4,
+      "minutes": 60
+    },
+    {
+      "title": "確認報告要求",
+      "value_score": 8,
+      "minutes": 15
+    }
+  ]
+}
+```
+
+## 94. 番茄鐘工時計畫｜合成範例
+
+```json
+{
+  "type": "pomodoro_planner",
+  "title": "番茄鐘工時計畫｜合成範例",
+  "focus_minutes": 25,
+  "rounds": 6,
+  "short_break": 5,
+  "long_break": 15,
+  "long_every": 4
+}
+```
+
+## 95. 時間投資回收｜合成範例
+
+```json
+{
+  "type": "time_savings_roi",
+  "title": "時間投資回收｜合成範例",
+  "setup_minutes": 120,
+  "saved_minutes_each": 10,
+  "maintenance_minutes_each": 2,
+  "uses": 30
+}
+```
+
+## 96. 會議人時成本｜合成範例
+
+```json
+{
+  "type": "meeting_person_hours",
+  "title": "會議人時成本｜合成範例",
+  "participants": [
+    {
+      "title": "主持人",
+      "minutes": 45
+    },
+    {
+      "title": "組員 A",
+      "minutes": 45
+    },
+    {
+      "title": "組員 B",
+      "minutes": 30
+    }
+  ],
+  "meeting_minutes": 45
+}
+```
+
+## 97. 期限倒排日曆｜合成範例
+
+```json
+{
+  "type": "deadline_backplan",
+  "title": "期限倒排日曆｜合成範例",
+  "deadline": "2026-10-16",
+  "daily_minutes": 120,
+  "workdays": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "excluded_dates": [],
+  "tasks": [
+    {
+      "title": "資料整理",
+      "minutes": 180
+    },
+    {
+      "title": "初稿",
+      "minutes": 240
+    },
+    {
+      "title": "校對提交",
+      "minutes": 60
+    }
+  ]
+}
+```
+
+## 98. 關鍵路徑 CPM｜合成範例
+
+```json
+{
+  "type": "critical_path_plan",
+  "title": "關鍵路徑 CPM｜合成範例",
+  "tasks": [
+    {
+      "id": "a",
+      "title": "需求確認",
+      "duration": 2,
+      "depends": []
+    },
+    {
+      "id": "b",
+      "title": "原型",
+      "duration": 4,
+      "depends": [
+        "a"
+      ]
+    },
+    {
+      "id": "c",
+      "title": "資料準備",
+      "duration": 2,
+      "depends": [
+        "a"
+      ]
+    },
+    {
+      "id": "d",
+      "title": "驗證",
+      "duration": 3,
+      "depends": [
+        "b",
+        "c"
+      ]
+    }
+  ],
+  "unit": "天"
+}
+```
+
+## 99. 計畫／實際時間差異｜合成範例
+
+```json
+{
+  "type": "time_variance_audit",
+  "title": "計畫／實際時間差異｜合成範例",
+  "tasks": [
+    {
+      "title": "閱讀",
+      "planned_minutes": 60,
+      "actual_minutes": 80
+    },
+    {
+      "title": "解題",
+      "planned_minutes": 90,
+      "actual_minutes": 100
+    },
+    {
+      "title": "報告",
+      "planned_minutes": 60,
+      "actual_minutes": 45
+    }
+  ]
+}
+```
+
+## 100. Little 定律流程時間｜合成範例
+
+```json
+{
+  "type": "little_law_time",
+  "title": "Little 定律流程時間｜合成範例",
+  "average_wip": 12,
+  "throughput_per_hour": 3,
+  "unit": "件"
 }
 ```
