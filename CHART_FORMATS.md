@@ -1,6 +1,6 @@
-# 76 種指令格式
+# 82 種指令格式
 
-App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-76.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
+App 選擇類型後按「範例」即可載入對應指令。不要把整份 charts-82.json 一次貼入；它是範例目錄，請取其中一個物件。所有數值必須為有限數字，相關陣列長度必須一致。
 
 ## 心智圖 (`mindmap`)
 
@@ -2537,3 +2537,166 @@ App 選擇類型後按「範例」即可載入對應指令。不要把整份 cha
 "report": {"x_label":"時間（秒）", "y_label":"產出（件）", "caption":"圖 1：實驗結果", "source":"實驗紀錄，日期與樣本數"}
 ```
 此欄位置於圖表 JSON 的最外層，與 type、title 同層。
+
+# 新增商業架構（77–82）
+
+## 77. PESTEL 環境分析｜合成範例
+
+```json
+{
+  "type": "pestel_analysis",
+  "title": "PESTEL 環境分析｜合成範例",
+  "political": [
+    "政策補助可能支持改善"
+  ],
+  "economic": [
+    "設備預算有限"
+  ],
+  "social": [
+    "操作人員需要容易理解的介面"
+  ],
+  "technological": [
+    "感測器與開源工具可降低門檻"
+  ],
+  "environmental": [
+    "減少重工與材料浪費"
+  ],
+  "legal": [
+    "確認資料與設備使用規範"
+  ]
+}
+```
+
+## 78. 波特五力分析｜合成範例
+
+```json
+{
+  "type": "porter_five_forces",
+  "title": "波特五力分析｜合成範例",
+  "rivalry": [
+    "既有軟體服務競爭"
+  ],
+  "new_entrants": [
+    "低成本工具降低進入門檻"
+  ],
+  "substitutes": [
+    "紙本紀錄或試算表"
+  ],
+  "supplier_power": [
+    "設備來源是否集中"
+  ],
+  "buyer_power": [
+    "客戶可選其他方案"
+  ]
+}
+```
+
+## 79. AIDA 溝通架構｜合成範例
+
+```json
+{
+  "type": "aida_framework",
+  "title": "AIDA 溝通架構｜合成範例",
+  "attention": "每天有多少時間花在找零件？",
+  "interest": "展示一個工作站的尋料流程。",
+  "desire": "以實測比較改善前後差異，而非保證效果。",
+  "action": "邀請參加一週小規模試用並提供回饋。"
+}
+```
+
+## 80. OKR 目標與關鍵成果｜合成範例
+
+```json
+{
+  "type": "okr_framework",
+  "title": "OKR 目標與關鍵成果｜合成範例",
+  "objective": "改善本月專題驗證品質",
+  "key_results": [
+    {
+      "title": "完成有效需求訪談",
+      "baseline": 0,
+      "current": 3,
+      "target": 8,
+      "unit": "位",
+      "direction": "increase"
+    },
+    {
+      "title": "平均備料時間",
+      "baseline": 60,
+      "current": 52,
+      "target": 40,
+      "unit": "秒",
+      "direction": "decrease"
+    },
+    {
+      "title": "完成驗證案例",
+      "baseline": 0,
+      "current": 2,
+      "target": 5,
+      "unit": "件",
+      "direction": "increase"
+    }
+  ]
+}
+```
+
+## 81. 製程缺失分布｜合成範例
+
+```json
+{
+  "type": "engineering_pareto",
+  "title": "製程缺失分布｜合成範例",
+  "labels": [
+    "尺寸偏差",
+    "表面刮傷",
+    "裝配錯誤",
+    "標示缺失",
+    "其他"
+  ],
+  "counts": [
+    42,
+    25,
+    18,
+    10,
+    5
+  ],
+  "unit": "件"
+}
+```
+
+## 82. 零件直徑與規格｜合成範例
+
+```json
+{
+  "type": "process_capability",
+  "title": "零件直徑與規格｜合成範例",
+  "values": [
+    9.91,
+    10.03,
+    9.99,
+    10.07,
+    9.96,
+    10.01,
+    10.12,
+    9.93,
+    10.02,
+    9.98,
+    10.04,
+    9.97,
+    10.08,
+    10.01,
+    9.94,
+    10.05,
+    10.11,
+    9.89,
+    10,
+    10.06
+  ],
+  "lsl": 9.8,
+  "usl": 10.2,
+  "target": 10,
+  "unit": "mm",
+  "bins": 10,
+  "within_sigma": 0
+}
+```

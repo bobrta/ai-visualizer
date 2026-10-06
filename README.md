@@ -1,4 +1,4 @@
-# Visual Canvas｜76 種圖形指令 App
+# Visual Canvas｜82 種圖形指令 App
 
 貼入 JSON 指令 → 按「產生圖形」→ 直接顯示圖形，不需要 AI API 金鑰。
 
@@ -6,7 +6,7 @@
 
 直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site 。網站不需帳號登入，入口採用前端密碼介面。密碼另行提供，不在 README 公開。
 
-點「選擇指令架構」挑選 76 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
+點「選擇指令架構」挑選 82 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
 
 ## 本機使用
 
@@ -24,7 +24,7 @@ GitHub 檔案預覽不會執行 HTML；線上版已透過 Sites 發布，非 Git
 
 心智圖、折線、長條、群組長條、堆疊長條、面積、堆疊面積、散佈、氣泡、圓餅、環圈、直方、箱形、小提琴、熱力、等高線、3D 散佈、3D 折線、3D 曲面、3D 長條、瀑布、漏斗、雷達、極座標、矩形樹、旭日、桑基、平行座標、K 線、資料表。
 
-完整格式見 CHART_FORMATS.md；examples/charts-76.json 是 76 份合成示範資料的目錄。每次貼入其中一個圖形物件。
+完整格式見 CHART_FORMATS.md；examples/charts-82.json 是 82 份合成示範資料的目錄。每次貼入其中一個圖形物件。
 
 ## 執行與資料
 
@@ -73,7 +73,7 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 
 
-## 主工作台擴充到 76 種
+## 主工作台擴充到 82 種
 
 原 30 種保留，新增 20 個學習視圖：概念圖、因果鏈、決策樹、比較矩陣、流程圖、公式關係圖、層級分類圖、考前總覽、魚骨原因圖、集合重疊圖、四象限學習圖、事件時間軸、循環學習圖、層級金字塔、康乃爾筆記圖、KWL 知識盤點、主動提取問答卡、間隔複習排程、學習甘特圖、論證結構圖。
 
@@ -81,15 +81,15 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 擴充位於 `extensions/learning-charts/`，不修改研究工作室。讀取順序：appearance → charts → learning catalog → learning adapters → professional → 主程式 → builder。請完整保留專案資料夾，不能只下載 index.html。
 
-完整格式見 [CHART_FORMATS.md](CHART_FORMATS.md)，[76 個範例](examples/charts-76.json)，[學習圖使用與限制](extensions/learning-charts/README.md)。
+完整格式見 [CHART_FORMATS.md](CHART_FORMATS.md)，[82 個範例](examples/charts-82.json)，[學習圖使用與限制](extensions/learning-charts/README.md)。
 
-本次驗證：76 種範例表單來回轉換、69 個 Plotly 配置、11 種非法輸入、新增 20 種黑底配置通過。尚未實測本次新增圖表的瀏覽器繪製與下載；不能把配置檢查等同圖形與匯出測試。
+本次驗證：82 種範例表單來回轉換、69 個 Plotly 配置、11 種非法輸入、新增 20 種黑底配置通過。尚未實測本次新增圖表的瀏覽器繪製與下載；不能把配置檢查等同圖形與匯出測試。
 
 ## 流程與時間圖（51–70）與直接 PDF
 
 新增 10 種流程圖、10 種時間圖，獨立放在 `extensions/flow-time/`。沿用 JSON、中文表單、20 色及黑白底。PDF 現在直接產生檔案，無須列印視窗；下載被阻擋可點狀態列連結。PDF 是 A4 橫式高解析度點陣圖，向量需求請下載 SVG。
 
-驗證：76 種範例、70 次表單來回轉換、69 個 Plotly 設定、40 個新增圖表黑底設定；PDF 檔案結構經 pdfinfo 與 pdftoppm 驗證。瀏覽器實際渲染與下載尚未實測。
+驗證：82 種範例、70 次表單來回轉換、69 個 Plotly 設定、40 個新增圖表黑底設定；PDF 檔案結構經 pdfinfo 與 pdftoppm 驗證。瀏覽器實際渲染與下載尚未實測。
 
 ## 可讀性與報告模式
 
@@ -106,3 +106,9 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 - https://www.itl.nist.gov/div898/handbook/pmc/section1/pmc16.htm
 
 程式為本專案實作，未複製上述第三方程式碼。檢查：76 次表單轉換、75 個 Plotly 設定、46 個新增圖黑底、24 個非法輸入、柏拉圖累積百分比與能力公式、字級縮放及事件循環。這些是程式測試；本次未實測瀏覽器渲染、字體重疊及下載。
+
+## 10 個商業架構
+
+PREP、SWOT、TOWS、SCQA、商業模式畫布 BMC、價值主張畫布 VPC、PESTEL、波特五力、AIDA、OKR。全部放在獨立的 `extensions/strategy/`，使用原有的字級、配色和匯出。範例為合成資料，並非實際市場或法律判斷。
+
+本次新增六個商業架構後，檢查通過 82 種範例與表單轉換、81 個 Plotly 設定、31 個非法輸入、52 個新增圖黑底設定，以及 OKR 增加／降低方向的進度計算；未實測瀏覽器繪製或下載。
