@@ -1,4 +1,4 @@
-# Visual Canvas｜70 種圖形指令 App
+# Visual Canvas｜76 種圖形指令 App
 
 貼入 JSON 指令 → 按「產生圖形」→ 直接顯示圖形，不需要 AI API 金鑰。
 
@@ -6,7 +6,7 @@
 
 直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site 。網站不需帳號登入，入口採用前端密碼介面。密碼另行提供，不在 README 公開。
 
-點「選擇指令架構」挑選 70 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
+點「選擇指令架構」挑選 76 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
 
 ## 本機使用
 
@@ -24,7 +24,7 @@ GitHub 檔案預覽不會執行 HTML；線上版已透過 Sites 發布，非 Git
 
 心智圖、折線、長條、群組長條、堆疊長條、面積、堆疊面積、散佈、氣泡、圓餅、環圈、直方、箱形、小提琴、熱力、等高線、3D 散佈、3D 折線、3D 曲面、3D 長條、瀑布、漏斗、雷達、極座標、矩形樹、旭日、桑基、平行座標、K 線、資料表。
 
-完整格式見 CHART_FORMATS.md；examples/charts-70.json 是 70 份合成示範資料的目錄。每次貼入其中一個圖形物件。
+完整格式見 CHART_FORMATS.md；examples/charts-76.json 是 76 份合成示範資料的目錄。每次貼入其中一個圖形物件。
 
 ## 執行與資料
 
@@ -73,7 +73,7 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 
 
-## 主工作台擴充到 70 種
+## 主工作台擴充到 76 種
 
 原 30 種保留，新增 20 個學習視圖：概念圖、因果鏈、決策樹、比較矩陣、流程圖、公式關係圖、層級分類圖、考前總覽、魚骨原因圖、集合重疊圖、四象限學習圖、事件時間軸、循環學習圖、層級金字塔、康乃爾筆記圖、KWL 知識盤點、主動提取問答卡、間隔複習排程、學習甘特圖、論證結構圖。
 
@@ -81,12 +81,28 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 擴充位於 `extensions/learning-charts/`，不修改研究工作室。讀取順序：appearance → charts → learning catalog → learning adapters → professional → 主程式 → builder。請完整保留專案資料夾，不能只下載 index.html。
 
-完整格式見 [CHART_FORMATS.md](CHART_FORMATS.md)，[70 個範例](examples/charts-70.json)，[學習圖使用與限制](extensions/learning-charts/README.md)。
+完整格式見 [CHART_FORMATS.md](CHART_FORMATS.md)，[76 個範例](examples/charts-76.json)，[學習圖使用與限制](extensions/learning-charts/README.md)。
 
-本次驗證：70 種範例表單來回轉換、69 個 Plotly 配置、11 種非法輸入、新增 20 種黑底配置通過。尚未實測本次新增圖表的瀏覽器繪製與下載；不能把配置檢查等同圖形與匯出測試。
+本次驗證：76 種範例表單來回轉換、69 個 Plotly 配置、11 種非法輸入、新增 20 種黑底配置通過。尚未實測本次新增圖表的瀏覽器繪製與下載；不能把配置檢查等同圖形與匯出測試。
 
 ## 流程與時間圖（51–70）與直接 PDF
 
 新增 10 種流程圖、10 種時間圖，獨立放在 `extensions/flow-time/`。沿用 JSON、中文表單、20 色及黑白底。PDF 現在直接產生檔案，無須列印視窗；下載被阻擋可點狀態列連結。PDF 是 A4 橫式高解析度點陣圖，向量需求請下載 SVG。
 
-驗證：70 種範例、70 次表單來回轉換、69 個 Plotly 設定、40 個新增圖表黑底設定；PDF 檔案結構經 pdfinfo 與 pdftoppm 驗證。瀏覽器實際渲染與下載尚未實測。
+驗證：76 種範例、70 次表單來回轉換、69 個 Plotly 設定、40 個新增圖表黑底設定；PDF 檔案結構經 pdfinfo 與 pdftoppm 驗證。瀏覽器實際渲染與下載尚未實測。
+
+## 可讀性與報告模式
+
+圖表縮放時節點／連線標籤與文字標記按座標跨度同步改變字級；畫布放大亦調整字級。軸刻度保持可讀，另有 100%、125%、150%、200% 字級選擇。PNG 使用相同畫布的 3 倍解析度，PDF 保留画面比例。心智圖字級會同時更新節點換行與高度。
+
+新增兩種工程圖：缺失柏拉圖、製程能力與規格圖。新增四種表達／策略架構：PREP、SWOT、TOWS、SCQA。所有範例為合成資料。可填寫座標與單位、图說及資料來源；這些欄位同時保存於 JSON 的 report 欄位。規格界限不是管制界限。製程能力圖只在提供正值 within_sigma 時顯示 Cp/Cpk；0 表示未提供。使用能力指標前需確認製程穩定、估計方法與分布假設，工具不自動認定製程合格。
+
+參考：
+- https://plotly.com/javascript/plotlyjs-events/
+- https://plotly.com/javascript/plotlyjs-function-reference/
+- https://github.com/plotly/plotly.js/blob/master/src/components/annotations/draw.js
+- https://github.com/d3/d3-zoom/blob/main/src/transform.js
+- https://asq.org/quality-resources/pareto
+- https://www.itl.nist.gov/div898/handbook/pmc/section1/pmc16.htm
+
+程式為本專案實作，未複製上述第三方程式碼。檢查：76 次表單轉換、75 個 Plotly 設定、46 個新增圖黑底、24 個非法輸入、柏拉圖累積百分比與能力公式、字級縮放及事件循環。這些是程式測試；本次未實測瀏覽器渲染、字體重疊及下載。

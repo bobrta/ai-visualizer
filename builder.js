@@ -24,3 +24,7 @@ fillForm(chartExample('mindmap'));showMode(true);
 $('json').onclick=()=>{try{const d=formMode?collectForm():JSON.parse($('input').value);d.presentation=VCStyle.state();save(JSON.stringify(d,null,2),'application/json','visual-command.json');}catch(e){$('status').textContent=e.message;}};
 const originalSync=sync;sync=()=>{originalSync();fillForm(JSON.parse($('input').value));};
 
+
+Object.assign(FIELD_NAMES,{counts:"缺失次數",lsl:"規格下限 LSL",usl:"規格上限 USL",target:"目標值",within_sigma:"組內標準差 σ（0 表示未提供）",bins:"直方圖組數"});
+
+Object.assign(FIELD_NAMES,{point:"P 觀點",reason:"R 理由",example:"E 例子／證據",restatement:"P 重申與行動",strengths:"S 優勢",weaknesses:"W 弱勢",opportunities:"O 機會",threats:"T 威脅",so:"SO 運用優勢掌握機會",st:"ST 運用優勢應對威脅",wo:"WO 改善弱勢掌握機會",wt:"WT 降低弱勢避開威脅",situation:"S 情境",complication:"C 衝突",question:"Q 問題",answer:"A 答案"});
