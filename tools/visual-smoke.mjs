@@ -6,6 +6,7 @@ const ROOT=process.cwd();
 const BASE=process.env.VC_BASE_URL||'http://127.0.0.1:4173';
 const OUT=path.join(ROOT,'artifacts','visual');
 fs.mkdirSync(OUT,{recursive:true});
+const LOCAL_PLOTLY=fs.readFileSync(path.join(ROOT,'node_modules','plotly.js-dist-min','plotly.min.js'));
 const gateSource=fs.readFileSync(path.join(ROOT,'gate-config.js'),'utf8');
 const gateHash=gateSource.match(/"hash"\s*:\s*"([^"]+)"/)?.[1];
 if(!gateHash)throw new Error('Unable to read frontend gate hash for browser tests.');
@@ -27,8 +28,10 @@ async function screenshot(locator,file){
 async function mainChart(page,type,file){
   await page.selectOption('#chartType',type);
   await page.click('#sample');
-  await page.waitForFunction(()=>document.querySelector('#status')?.textContent.includes('已產生'),null,{timeout:35000});
-  await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:15000});
+  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已產生')||s.includes('無法產生');},null,{timeout:20000});
+  const status=await page.locator('#status').textContent();
+  assert(status?.includes('已產生'),`${type}: render failed: ${status}`);
+  await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:10000});
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
     const texts=[...document.querySelectorAll('#plot text')].map(n=>parseFloat(getComputedStyle(n).fontSize)).filter(Number.isFinite);
@@ -77,6 +80,7 @@ async function researchDiagram(context,id,engine,file){
 const browser=await chromium.launch({headless:true});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+  await context.route(/https:\/\/cdn\.plot\.ly\/plotly-[^/]+\.min\.js/,route=>route.fulfill({status:200,contentType:'application/javascript',body:LOCAL_PLOTLY}));
   await context.addInitScript(hash=>{try{sessionStorage.setItem('visual-gate-session',hash);}catch{}},gateHash);
 
   const main=await context.newPage(),mainCheck=await attachDiagnostics(main,'main');
