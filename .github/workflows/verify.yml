@@ -70,6 +70,8 @@ jobs:
         run: node tools/check-pdf.cjs
       - name: Check typography
         run: node tools/check-typography.cjs
+      - name: Check presentation design system
+        run: node tools/check-design-system.cjs
 
       - name: Verify referenced local assets
         shell: bash

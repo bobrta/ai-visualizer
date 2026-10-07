@@ -24,6 +24,6 @@ function bind(g,config){if(state){clearTimeout(state.timer);state.observer?.disc
  if(typeof ResizeObserver!=='undefined'){state.observer=new ResizeObserver(schedule);state.observer.observe(g);}return update();}
 async function zoomBy(k){if(!state)return;const s=state,u={};for(const key of ['xaxis','yaxis']){const r=range(s.g,key);if(!span(r))continue;const center=(r[0]+r[1])/2;u[key+'.range']=r.map(v=>center+(v-center)/k);u[key+'.autorange']=false;}if(Object.keys(u).length){await window.Plotly.relayout(s.g,u);await update();}else await setMultiplier(multiplier*k);}
 async function fit(){if(!state)return;const u={};for(const [key,r]of [['xaxis',state.x],['yaxis',state.y]])if(span(r)){u[key+'.range']=r;u[key+'.autorange']=false;}await window.Plotly.relayout(state.g,u);await update();}
-function setMultiplier(n){multiplier=clamp(Number(n)||1,.8,2);return update();}
+function setMultiplier(n){multiplier=clamp(Number(n)||1,.85,1.6);return update();}
 window.VCTypography={bind,update,zoomBy,fit,setMultiplier,get multiplier(){return multiplier;},factor,changes};
 })();
