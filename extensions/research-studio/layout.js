@@ -20,9 +20,9 @@ function plan(d,basePreview,outputWidth){
    const s=mermaidStats(d.data?.code||'');
    height=clamp(230+s.tasks*42+s.sections*22,330,620);reason='gantt-content';
  }else if(['why','argument'].includes(type)){
-   const n=nodeCount(d);height=clamp(300+n*24,390,560);reason='tree-content';
+   const n=nodeCount(d);height=clamp(300+n*25,390,690);reason='tree-content';
  }else if(['concept','causal','exchange','network'].includes(type)){
-   const n=nodeCount(d);height=clamp(390+n*12,480,650);reason='network-content';
+   const n=nodeCount(d);height=clamp(390+n*13,480,700);reason='network-content';
  }else if(['flowchart','state','class','er'].includes(type)){
    height=clamp(Math.round(width*.52),420,610);reason='diagram-content';
  }else if(type==='concept_lesson'){
