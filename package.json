@@ -1,0 +1,13 @@
+{
+  "name": "visual-canvas-tests",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Development-only browser regression tests for the static Visual Canvas app.",
+  "scripts": {
+    "test:visual": "node tools/visual-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.55.0",
+    "plotly.js-dist-min": "4.1.1"
+  }
+}
