@@ -1,7 +1,7 @@
 /* Usage: node tools/check-pdf.cjs /path/to/test.jpg /tmp/output.pdf */
-const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
-const [jpegPath,outPath]=process.argv.slice(2);if(!jpegPath||!outPath)throw Error('Provide test JPEG and output PDF paths.');
-const jpeg=fs.readFileSync(jpegPath),data='data:image/jpeg;base64,'+jpeg.toString('base64');let clicked=0,appended=0,removed=0;
+const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path'),os=require('os');
+const [jpegPathArg,outPathArg]=process.argv.slice(2),outPath=outPathArg||path.join(os.tmpdir(),'visual-canvas-check.pdf');
+const jpeg=jpegPathArg?fs.readFileSync(jpegPathArg):Buffer.from([0xff,0xd8,0xff,0xd9]),data='data:image/jpeg;base64,'+jpeg.toString('base64');let clicked=0,appended=0,removed=0;
 class Img{naturalWidth=600;naturalHeight=400;set src(v){queueMicrotask(()=>this.onload());}}
 const g={fillRect(){},fillText(){},drawImage(){},measureText:s=>({width:s.length*20})};
 const doc={createElement:type=>type==='canvas'?{getContext:()=>g,toDataURL:()=>data}:{style:{},click(){clicked++;},remove(){removed++;}},body:{appendChild(){appended++;}}};
