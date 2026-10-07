@@ -112,6 +112,8 @@ jobs:
         run: node tools/check-diagram-engine.cjs
       - name: Check Research Figure Layout
         run: node tools/check-research-layout.cjs
+      - name: Check Research Relations P1
+        run: node tools/check-research-relations-p1.cjs
 
       - name: Verify referenced local assets
         shell: bash
