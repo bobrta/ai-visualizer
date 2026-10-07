@@ -90,7 +90,7 @@
     const name=prompt('重新命名圖表',item.title);if(!name?.trim())return;item.title=name.trim().slice(0,120);item.updatedAt=now();p.updatedAt=now();persist();render();
   }
   function switchProject(id){
-    if(!db.projects[id])return;saveProjectContext();active=id;persist();restoreContext(project().context);window.VCProjectManager.currentItemId=null;render();status('已切換到專案「'+project().name+'」。');
+    if(!db.projects[id])return;saveProjectContext();active=id;persist();restoreContext(project().context);window.VCProjectManager.currentItemId=null;location.reload();
   }
   function renameProject(){
     const p=project();if(!p)return;const name=prompt('重新命名專案',p.name);if(!name?.trim())return;p.name=name.trim().slice(0,80);p.updatedAt=now();persist();render();
@@ -105,7 +105,7 @@
     const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=p.name.replace(/[\\/:*?"<>|]/g,'-')+'.visual-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
   function importProject(file){
-    const reader=new FileReader();reader.onload=()=>{try{const pack=JSON.parse(reader.result);const p=pack?.project;if(pack?.schema!=='visual-canvas-project'||!p?.name||!Array.isArray(p.items))throw Error('不是有效的 Visual Canvas 專案檔。');const id=uid();db.projects[id]={...p,id,name:String(p.name).slice(0,80),updatedAt:now()};active=id;persist();restoreContext(db.projects[id].context);render();status('已匯入專案「'+db.projects[id].name+'」。');}catch(e){status('匯入失敗：'+e.message);}};reader.readAsText(file);}
+    const reader=new FileReader();reader.onload=()=>{try{const pack=JSON.parse(reader.result);const p=pack?.project;if(pack?.schema!=='visual-canvas-project'||!p?.name||!Array.isArray(p.items))throw Error('不是有效的 Visual Canvas 專案檔。');const id=uid();db.projects[id]={...p,id,name:String(p.name).slice(0,80),updatedAt:now()};active=id;persist();restoreContext(db.projects[id].context);location.reload();}catch(e){status('匯入失敗：'+e.message);}};reader.readAsText(file);}
   function renderSummary(){
     const p=project(),summary=$('projectSummary');if(!summary)return;
     if(!p){summary.textContent='尚未選擇專案';return;}
