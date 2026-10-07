@@ -61,7 +61,7 @@ c=ctx.chartConfig(d);
 assert.equal(c.executiveQuality.finalLayout,'top_kpi','unsafe manual split layout is protected');
 assert(c.executiveQuality.warnings.some(x=>x.code==='many-series'),'many-series warning exposed');
 assert(c.executiveQuality.fixes.some(x=>x.code==='legend-fit'),'dense legend gets layout fit');
-assert(c.layout.legend.font.size<=8,'very dense legend shrinks');
+assert(c.layout.legend.font.size>=10&&c.layout.legend.font.size<=10,'very dense legend keeps accessible 10px floor');
 assert(c.executiveQuality.score<100,'pressure reduces quality score');
 
 // Chart-only mode should not mutate with executive quality.
