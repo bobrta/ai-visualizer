@@ -1,0 +1,89 @@
+name: Verify Visual Canvas
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Syntax check core and extensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            builder.js
+            charts.js
+            gate.js
+            gate-config.js
+            extensions/editor-state.js
+            extensions/template-library.js
+            extensions/sidebar-workflow.js
+            extensions/work-mode.js
+            extensions/output-format.js
+            extensions/chart-advisor.js
+            extensions/presentation-story.js
+            extensions/research-workspace.js
+            extensions/project-manager.js
+            extensions/pdf-export.js
+            extensions/appearance.js
+            extensions/professional.js
+            extensions/typography/report.js
+            extensions/typography/scaling.js
+            extensions/learning-charts/catalog.js
+            extensions/learning-charts/adapters.js
+            extensions/flow-time/catalog.js
+            extensions/flow-time/adapters.js
+            extensions/strategy/charts.js
+            extensions/strategy/business.js
+            extensions/engineering/charts.js
+            extensions/engineering/calculators.js
+            extensions/business-time/charts.js
+            extensions/research-studio/catalog.js
+            extensions/research-studio/adapters.js
+            extensions/research-studio/thinking.js
+            extensions/research-studio/studio.js
+          )
+          for f in "${files[@]}"; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Check learning charts
+        run: node tools/check-learning.cjs
+      - name: Check industrial engineering
+        run: node tools/check-ie.cjs
+      - name: Check business time
+        run: node tools/check-business-time.cjs
+      - name: Check PDF
+        run: node tools/check-pdf.cjs
+      - name: Check typography
+        run: node tools/check-typography.cjs
+
+      - name: Verify referenced local assets
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const refs=[...html.matchAll(/(?:src|href)="([^"]+)"/g)]
+            .map(m=>m[1])
+            .filter(x=>!x.startsWith('http')&&!x.startsWith('#')&&!x.startsWith('data:'));
+          const missing=refs.filter(x=>!fs.existsSync(x.split('?')[0]));
+          if(missing.length){
+            console.error('Missing local assets:',missing);
+            process.exit(1);
+          }
+          console.log('Local asset references OK:',refs.length);
+          NODE
