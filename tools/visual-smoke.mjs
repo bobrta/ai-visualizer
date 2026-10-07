@@ -232,7 +232,7 @@ try{
   assert(qualityUI.topCards>=2,'stress: safe top-KPI cards missing');
   assert(qualityUI.headline.includes('<br>'),'stress: long headline did not wrap');
   assert(qualityUI.source.length<160,'stress: long source was not shortened for presentation');
-  assert(Number(qualityUI.legend?.font?.size)<=9,'stress: dense legend was not compacted');
+  assert(Number(qualityUI.legend?.font?.size)>=10&&Number(qualityUI.legend?.font?.size)<=10,'stress: dense legend did not keep the accessibility-safe 10px size');
   assert(!qualityUI.bad,'stress: rendered output contains invalid numeric content');
   await screenshot(main.locator('#plot'),'main-executive-quality-stress.png');
 
