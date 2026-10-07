@@ -159,6 +159,64 @@ try{
   assert(executiveUI.paperHeadings>=1,'bar: executive headline missing');
   await screenshot(main.locator('#plot'),'main-executive-summary.png');
 
+  const autoBarLayout=await main.evaluate(()=>({
+    selected:document.querySelector('#executiveLayoutMode')?.value,
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null,
+    leftCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.x1)<=.26).length,
+    status:document.querySelector('#status')?.textContent||''
+  }));
+  assert(autoBarLayout.selected==='auto','bar: executive layout selector should remain Auto');
+  assert(autoBarLayout.xdomain&&autoBarLayout.xdomain[0]>=.34,'bar: Auto did not choose left-KPI domain');
+  assert(autoBarLayout.leftCards>=2,'bar: left KPI cards missing');
+  assert(autoBarLayout.status.includes('左 KPI + 右主圖'),'bar: resolved layout missing from status');
+  await screenshot(main.locator('#plot'),'main-executive-left-kpi.png');
+
+  await main.selectOption('#chartType','line');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const autoTrend=await main.evaluate(()=>({
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null,
+    status:document.querySelector('#status')?.textContent||'',
+    metricBlocks:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.x1)<=.23).length
+  }));
+  assert(autoTrend.xdomain&&autoTrend.xdomain[0]>=.30,'line: Auto did not choose trend-focus domain');
+  assert(autoTrend.metricBlocks>=1,'line: large metric block missing');
+  assert(autoTrend.status.includes('大數字 + 趨勢圖'),'line: trend-focus layout missing from status');
+  await screenshot(main.locator('#plot'),'main-executive-trend-focus.png');
+
+  await main.selectOption('#chartType','grouped_bar');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const autoCompare=await main.evaluate(()=>({
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null,
+    status:document.querySelector('#status')?.textContent||'',
+    rightCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.x0)>=.72).length
+  }));
+  assert(autoCompare.xdomain&&autoCompare.xdomain[1]<=.64,'grouped_bar: Auto did not choose split-compare domain');
+  assert(autoCompare.rightCards>=2,'grouped_bar: right KPI cards missing');
+  assert(autoCompare.status.includes('雙欄比較'),'grouped_bar: split-compare layout missing from status');
+  await screenshot(main.locator('#plot'),'main-executive-split-compare.png');
+
+  await main.selectOption('#executiveLayoutMode','top_kpi');
+  await main.waitForTimeout(900);
+  const manualTop=await main.evaluate(()=>({
+    selected:document.querySelector('#executiveLayoutMode')?.value,
+    status:document.querySelector('#status')?.textContent||'',
+    topCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length,
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null
+  }));
+  assert(manualTop.selected==='top_kpi','manual layout selector did not persist');
+  assert(manualTop.topCards>=2,'manual top-KPI layout missing KPI cards');
+  assert(manualTop.status.includes('KPI 上排 + 主圖'),'manual top-KPI layout missing from status');
+  await screenshot(main.locator('#plot'),'main-executive-top-kpi.png');
+
+  await main.selectOption('#executiveLayoutMode','auto');
+  await main.waitForTimeout(700);
+
   await main.selectOption('#executiveSummaryMode','chart');
   await main.waitForTimeout(900);
   const chartOnly=await main.evaluate(()=>({
