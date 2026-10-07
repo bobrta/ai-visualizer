@@ -129,12 +129,16 @@ try{
   const insightUI=await main.evaluate(()=>({
     hidden:document.querySelector('#insightPanel')?.hidden,
     items:document.querySelectorAll('#insightPanel .insight-item').length,
-    annotations:(document.querySelector('#plot')?.layout?.annotations||[]).length,
-    status:document.querySelector('#status')?.textContent||''
+    annotations:(document.querySelector('#plot')?.layout?.annotations||[]).map(a=>({text:a.text,ax:a.ax,ay:a.ay})),
+    status:document.querySelector('#status')?.textContent||'',
+    placement:Boolean(window.VCAnnotationLayout)
   }));
   assert(insightUI.hidden===false&&insightUI.items>=1,'bar: Auto Insight panel missing');
-  assert(insightUI.annotations>=1,'bar: Plotly annotation missing');
+  assert(insightUI.annotations.length>=1,'bar: Plotly annotation missing');
+  assert(insightUI.placement,'bar: Annotation Layout engine missing');
+  assert(insightUI.annotations.some(a=>Number.isFinite(a.ax)&&Number.isFinite(a.ay)),'bar: annotation placement offsets missing');
   assert(insightUI.status.includes('洞察'),'bar: insight count missing from status');
+  assert(insightUI.status.includes('標註配置'),'bar: annotation placement count missing from status');
   await screenshot(main.locator('#plot'),'main-bar-insight.png');
   mainCheck();
   await main.close();
