@@ -51,6 +51,7 @@ jobs:
             extensions/legend-intelligence.js
             extensions/executive-summary-v2.js
             extensions/executive-quality-v3.js
+            extensions/executive-quality-panel.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js

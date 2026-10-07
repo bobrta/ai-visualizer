@@ -37,7 +37,9 @@ GitHub 檔案預覽不會執行 HTML；線上版已透過 Sites 發布，非 Git
 
 ## 驗證
 
-JavaScript 語法、30 個架構按鈕與表單路由模擬、新舊心智圖格式、全部 30 種範例轉換、5 種非法資料檢查通過。環境的瀏覽器下載失敗，尚未完成實際瀏覽器渲染、WebGL 與圖片匯出的驗證。
+目前 GitHub Actions 會執行 JavaScript 語法、圖表格式、PDF、Typography、Design System、Guardrails、Smart Layout、Auto Insight、Annotation Layout、Accessibility、Emphasis、Legend Intelligence、Executive Summary、Executive Layout Quality、Secondary Interfaces 與 Diagram Engine 等檢查。
+
+另有 Playwright + Chromium 的 Browser Visual Smoke，會實際載入主工作台與研究工作室，驗證 Plotly 圖表、3D、平行座標、商業簡報版型、極端長標題／長來源／多系列壓力案例、Quality Panel、研究圖與視覺截圖 artifact。這些測試用於回歸與版面穩定性，不代表所有瀏覽器、裝置與所有輸入組合都已人工驗證。
 
 ## 技術來源
 
@@ -63,7 +65,7 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 提供學術藍橙、商務低彩度與黑白列印，輸出含圖說及資料來源的 SVG、3× 像素 PNG。風格與選圖說明、第三方授權及限制見擴充資料夾 README/THIRD_PARTY。主程式的外觀層位於 `extensions/professional.css` 與 `extensions/professional.js`，可移除引入來回復原有樣式。
 
-本次驗證包含 14 個範例、3 套風格、誤差區間幾何、柏拉圖累積比例、5 個無效輸入案例及舊功能回歸。尚未進行實際瀏覽器視覺與匯出驗證。
+本次驗證包含程式規則檢查與 Chromium Browser Visual Smoke；研究工作室的 Why、Concept、Flowchart、Stakeholder System Map 會實際渲染並保存測試截圖。
 
 ## 20 色、黑白底與思考筆記
 

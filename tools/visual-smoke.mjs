@@ -226,6 +226,19 @@ try{
     bad:/NaN|Infinity/.test(document.querySelector('#plot')?.innerHTML||'')
   }));
   assert(qualityUI.engine,'stress: Executive Quality v3 engine missing');
+  const qualityPanel=await main.evaluate(()=>({
+    exists:Boolean(document.querySelector('#executiveQualityPanel')),
+    hidden:document.querySelector('#executiveQualityPanel')?.hidden,
+    score:document.querySelector('#executiveQualityPanel .eq-score')?.textContent||'',
+    fixes:document.querySelectorAll('#executiveQualityPanel .eq-item:not(.warn)').length,
+    safe:[...document.querySelectorAll('#executiveQualityPanel .eq-chip')].some(n=>n.textContent.includes('安全版型')),
+    text:document.querySelector('#executiveQualityPanel')?.textContent||''
+  }));
+  assert(qualityPanel.exists&&!qualityPanel.hidden,'stress: Executive Quality Panel missing');
+  assert(/\/100$/.test(qualityPanel.score),'stress: quality panel score missing');
+  assert(qualityPanel.fixes>=1,'stress: quality panel fixes missing');
+  assert(qualityPanel.safe,'stress: safe-layout explanation missing from quality panel');
+  assert(qualityPanel.text.includes('版面品質與自動修正'),'stress: quality panel title missing');
   assert(qualityUI.status.includes('版面品質'),'stress: quality score missing from status');
   assert(qualityUI.status.includes('修正'),'stress: quality fix count missing from status');
   assert(qualityUI.status.includes('KPI 上排 + 主圖'),'stress: unsafe split layout did not downgrade');
@@ -267,6 +280,7 @@ try{
   assert(chartOnly.mode==='chart','bar: chart-only selector did not switch');
   assert(!chartOnly.status.includes('簡報頁'),'bar: chart-only mode still reports executive page');
   assert(chartOnly.kpiCards===0,'bar: KPI cards remained in chart-only mode');
+  assert(await main.evaluate(()=>document.querySelector('#executiveQualityPanel')?.hidden===true),'chart-only: quality panel should hide');
 
   await main.selectOption('#executiveSummaryMode','executive');
   await main.waitForTimeout(900);
@@ -277,6 +291,7 @@ try{
     xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null
   }));
   assert(executiveBack.status.includes('簡報頁')&&executiveBack.cards>=2,'executive page did not restore after toggle');
+  assert(await main.evaluate(()=>document.querySelector('#executiveQualityPanel')?.hidden===false),'executive: quality panel did not restore');
   assert(executiveBack.selected==='auto','executive layout should remain Auto after mode toggle');
   assert(executiveBack.xdomain&&executiveBack.xdomain[1]<=.64,'grouped_bar should restore split-compare domain after toggle');
   await main.selectOption('#chartType','grouped_bar');
