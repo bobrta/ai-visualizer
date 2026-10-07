@@ -58,6 +58,7 @@ async function mainChart(page,type,file){
   assert(smart.status.includes('自動調整'),`${type}: Smart Layout did not report adjustments`);
   assert(await page.evaluate(()=>Boolean(window.VCAutoInsight)),`${type}: Auto Insight engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCAccessibility)),`${type}: Accessibility engine missing`);
+  assert(await page.evaluate(()=>Boolean(window.VCEmphasis)),`${type}: Emphasis engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -141,6 +142,20 @@ try{
   assert(insightUI.status.includes('洞察'),'bar: insight count missing from status');
   assert(insightUI.status.includes('標註配置'),'bar: annotation placement count missing from status');
   await screenshot(main.locator('#plot'),'main-bar-insight.png');
+  await main.selectOption('#chartType','grouped_bar');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const emphasisUI=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    opacities:(document.querySelector('#plot')?.data||[]).filter(t=>t.type==='bar').map(t=>t.opacity??1),
+    engine:Boolean(window.VCEmphasis)
+  }));
+  assert(emphasisUI.engine,'grouped_bar: Emphasis engine missing');
+  assert(emphasisUI.status.includes('主次層級'),'grouped_bar: hierarchy count missing from status');
+  assert(new Set(emphasisUI.opacities).size>=2,'grouped_bar: series hierarchy not visible in Plotly data');
+  await screenshot(main.locator('#plot'),'main-emphasis-grouped-bar.png');
   await main.evaluate(()=>VCStyle.set({theme:'mono'}));
   await main.selectOption('#chartType','grouped_bar');
   await main.click('#sample');
