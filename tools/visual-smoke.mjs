@@ -61,6 +61,7 @@ async function mainChart(page,type,file){
   assert(await page.evaluate(()=>Boolean(window.VCEmphasis)),`${type}: Emphasis engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCLegendIntelligence)),`${type}: Legend Intelligence engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCExecutiveSummary)),`${type}: Executive Summary engine missing`);
+  assert(await page.evaluate(()=>Boolean(window.VCExecutiveQuality)),`${type}: Executive Quality v3 engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -200,6 +201,45 @@ try{
   assert(autoCompare.rightCards>=2,'grouped_bar: right KPI cards missing');
   assert(autoCompare.status.includes('雙欄比較'),'grouped_bar: split-compare layout missing from status');
   await screenshot(main.locator('#plot'),'main-executive-split-compare.png');
+
+  const stressData={
+    type:'grouped_bar',
+    title:'九大區域年度營運績效與跨區比較分析',
+    headline:'這是一個刻意設計得非常長的商業結論標題用來驗證簡報版型在極端文字長度與多系列條件下仍然可以安全分行縮字並保留主圖閱讀空間',
+    report:{source:'企業內部 ERP、CRM、營運週報與各區域彙整資料；'.repeat(12)},
+    series:Array.from({length:9},(_,i)=>({name:'區域系列 '+(i+1),x:['Q1','Q2','Q3','Q4'],y:[10+i,18+i*2,15+i,22+i*2]}))
+  };
+  await main.selectOption('#chartType','grouped_bar');
+  await main.click('#codeMode');
+  await main.fill('#input',JSON.stringify(stressData,null,2));
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(700);
+  const qualityUI=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    engine:Boolean(window.VCExecutiveQuality),
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null,
+    topCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length,
+    headline:(document.querySelector('#plot')?.layout?.annotations||[]).find(a=>a.xref==='paper'&&Number(a.y)>=1.27&&String(a.text||'').includes('<b>'))?.text||'',
+    source:(document.querySelector('#plot')?.layout?.annotations||[]).find(a=>String(a.text||'').startsWith('資料來源：'))?.text||'',
+    legend:document.querySelector('#plot')?.layout?.legend||{},
+    bad:/NaN|Infinity/.test(document.querySelector('#plot')?.innerHTML||'')
+  }));
+  assert(qualityUI.engine,'stress: Executive Quality v3 engine missing');
+  assert(qualityUI.status.includes('版面品質'),'stress: quality score missing from status');
+  assert(qualityUI.status.includes('修正'),'stress: quality fix count missing from status');
+  assert(qualityUI.status.includes('KPI 上排 + 主圖'),'stress: unsafe split layout did not downgrade');
+  assert(qualityUI.topCards>=2,'stress: safe top-KPI cards missing');
+  assert(qualityUI.headline.includes('<br>'),'stress: long headline did not wrap');
+  assert(qualityUI.source.length<160,'stress: long source was not shortened for presentation');
+  assert(Number(qualityUI.legend?.font?.size)>=10&&Number(qualityUI.legend?.font?.size)<=10,'stress: dense legend did not keep the accessibility-safe 10px size');
+  assert(!qualityUI.bad,'stress: rendered output contains invalid numeric content');
+  await screenshot(main.locator('#plot'),'main-executive-quality-stress.png');
+
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
 
   await main.selectOption('#executiveLayoutMode','top_kpi');
   await main.waitForTimeout(900);

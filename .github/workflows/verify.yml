@@ -50,6 +50,7 @@ jobs:
             extensions/emphasis.js
             extensions/legend-intelligence.js
             extensions/executive-summary-v2.js
+            extensions/executive-quality-v3.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
@@ -99,6 +100,8 @@ jobs:
         run: node tools/check-legend-intelligence.cjs
       - name: Check Executive Summary
         run: node tools/check-executive-summary.cjs
+      - name: Check Executive Layout Quality
+        run: node tools/check-executive-quality.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1
