@@ -240,7 +240,7 @@ function layoutFlow(input,{rankGap=120,siblingGap=44,padding=52,maxNodeWidth=260
  for(const r of ranks){const arr=groups.get(r),cross=arr.reduce((sum,n,i)=>sum+(vertical?n.width:n.height)+(i?siblingGap:0),0),main=Math.max(...arr.map(n=>vertical?n.height:n.width));rankSizes.set(r,{cross,main});}
  let cursor=padding;
  for(const r of ranks){
-   const arr=groups.get(r),rs=rankSizes.get(r),cross=-rs.cross/2;
+   const arr=groups.get(r),rs=rankSizes.get(r);let cross=-rs.cross/2;
    for(const n of arr){const crossSize=vertical?n.width:n.height;if(vertical){n.x=cross+crossSize/2;n.y=cursor+rs.main/2;}else{n.x=cursor+rs.main/2;n.y=cross+crossSize/2;}cross+=crossSize+siblingGap;}
    cursor+=rs.main+rankGap;
  }
