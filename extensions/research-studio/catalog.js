@@ -8,6 +8,12 @@ const RESEARCH_CATALOG=[
 {id:'network',name:'知識關係網',group:'知識與結構',engine:'echarts',purpose:'呈現概念的交叉關係；拖曳節點探索網絡。連線不代表因果證據。',data:{nodes:[{id:'a',name:'極限'},{id:'b',name:'導數'},{id:'c',name:'積分'},{id:'d',name:'最佳化'}],links:[{source:'a',target:'b'},{source:'a',target:'c'},{source:'b',target:'d'}]}},
 {id:'tree',name:'階層樹圖',group:'知識與結構',engine:'echarts',purpose:'呈現分類與階層；不代表統計分群的樹狀圖。',data:{root:{name:'研究計畫',children:[{name:'問題定義',children:[{name:'文獻整理'},{name:'研究假設'}]},{name:'方法設計',children:[{name:'資料蒐集'},{name:'分析計畫'}]}]}}},
 {id:'calendar',name:'日曆熱力圖',group:'學習與時間',engine:'echarts',purpose:'依日期比較學習量或觀測值；沒有資料的日期不自動補零。',data:{range:'2026-10',values:[['2026-10-01',60],['2026-10-02',90],['2026-10-03',30],['2026-10-04',120],['2026-10-05',80]]}},
+{id:'stakeholder_system_map',name:'利害關係人系統圖',group:'流程與系統',engine:'native',purpose:'呈現核心平台、角色與各角色功能；適合企劃、系統架構與生態系簡報。',data:{center:'銀髮藥動脈雲端平台',groups:[
+{id:'admin',name:'Admin',relation:'治理',items:['法規遵循與資料安全監控','財務與帳務結算系統','客貨共載排程最佳化演算法','ESG 碳足跡減少追蹤儀表板']},
+{id:'elder',name:'長者與家屬',relation:'使用',items:['慢性病處方與領藥提醒','配送進度與到貨通知','家屬照護與異常提醒','用藥紀錄與服務回饋']},
+{id:'driver',name:'客運司機／配送員',relation:'執行',items:['客貨共載任務清單','定點交付與簽收確認','配送異常回報','路線與時段提示']},
+{id:'pharmacy',name:'在地藥師／醫療機構',relation:'供應',items:['處方與藥品準備','藥品交付核對','殘藥盤點與回收','用藥諮詢與轉介']}
+]}} ,
 {id:'flowchart',name:'流程圖',group:'流程與系統',engine:'mermaid',purpose:'描述步驟、判斷與迴圈。',data:{code:'flowchart TD\n A[提出研究問題] --> B[蒐集資料]\n B --> C{資料足夠？}\n C -->|是| D[分析與解釋]\n C -->|否| B\n D --> E[撰寫報告]'}},
 {id:'sequence',name:'循序圖',group:'流程與系統',engine:'mermaid',purpose:'呈現多方角色按時間順序交換訊息。',data:{code:'sequenceDiagram\n participant S as 學生\n participant T as 教師\n participant L as 實驗室\n S->>T: 提出研究問題\n T->>L: 確認資源\n L-->>S: 提供資料\n S->>T: 回報分析結果'}},
 {id:'gantt',name:'甘特圖',group:'學習與時間',engine:'mermaid',purpose:'規劃研究任務、日期與相依關係。',data:{code:'gantt\n dateFormat YYYY-MM-DD\n section 研究規劃\n 文獻閱讀 :a, 2026-10-01, 7d\n 方法設計 :b, after a, 5d\n section 執行\n 資料蒐集 :c, after b, 7d\n 報告撰寫 :after c, 5d'}},
