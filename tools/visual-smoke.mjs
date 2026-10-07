@@ -232,9 +232,13 @@ try{
   await main.waitForTimeout(900);
   const executiveBack=await main.evaluate(()=>({
     status:document.querySelector('#status')?.textContent||'',
-    cards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length
+    cards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect').length,
+    selected:document.querySelector('#executiveLayoutMode')?.value,
+    xdomain:document.querySelector('#plot')?.layout?.xaxis?.domain||null
   }));
-  assert(executiveBack.status.includes('簡報頁')&&executiveBack.cards>=2,'bar: executive page did not restore after toggle');
+  assert(executiveBack.status.includes('簡報頁')&&executiveBack.cards>=2,'executive page did not restore after toggle');
+  assert(executiveBack.selected==='auto','executive layout should remain Auto after mode toggle');
+  assert(executiveBack.xdomain&&executiveBack.xdomain[1]<=.64,'grouped_bar should restore split-compare domain after toggle');
   await main.selectOption('#chartType','grouped_bar');
   await main.click('#sample');
   await main.click('#generate');
