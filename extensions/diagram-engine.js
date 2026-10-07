@@ -251,7 +251,7 @@ function renderStakeholderSVG(data,width,height,style,{maxItemWidth=250}={}){
  const layout=layoutStakeholder(data,{maxItemWidth}),NS='http://www.w3.org/2000/svg',make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
  const svg=make('svg',{xmlns:NS,width,height,viewBox:`0 0 ${width} ${height}`});svg.append(make('rect',{width,height,fill:style.bg}));
  const f=fitBounds(layout.bounds,width,height,34),g=make('g',{transform:`translate(${f.tx} ${f.ty}) scale(${f.scale})`});svg.append(g);
- const byId=new Map(layout.nodes.map(n=>[n.id,n])),palette=typeof VCStyle!=='undefined'?VCStyle.palette():['#1F4E79','#176B69','#8B6F47','#8064A2','#B24A4A','#64748B'],white=style.bg||'#fff';
+ const byId=new Map(layout.nodes.map(n=>[n.id,n])),groupCount=layout.nodes.filter(n=>n.level===1).length,palette=typeof VCStyle!=='undefined'&&VCStyle.groupPalette?VCStyle.groupPalette(groupCount):['#1F4E79','#176B69','#8B6F47','#806293','#B24A4A','#64748B','#315DA8','#7C8F41','#8F5F86','#287C99'],white=style.bg||'#fff';
  for(const e of layout.edges){
    const s=byId.get(e.source),t=byId.get(e.target),gi=e.style?.groupIndex||0,color=palette[gi%palette.length],route=routeStakeholderEdge(s,t,{curve:e.kind==='stakeholder'?.08:.13});
    g.append(make('path',{d:route.d,fill:'none',stroke:color,'stroke-width':e.kind==='stakeholder'?3:2,'stroke-opacity':e.kind==='stakeholder'?.78:.58,'stroke-linecap':'round'}));
@@ -259,7 +259,7 @@ function renderStakeholderSVG(data,width,height,style,{maxItemWidth=250}={}){
  }
  for(const n of layout.nodes){
    const core=n.level===0,group=n.level===1,gi=n.data?.groupIndex||0,base=palette[gi%palette.length];
-   const fill=core?style.accent:group?base:mixHex(base,style.bg,.86),stroke=core?style.accent:base,ink=core||group?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;
+   const fill=core?style.accent:group?base:(typeof VCStyle!=='undefined'&&VCStyle.tone?VCStyle.tone(base,'faint'):mixHex(base,style.bg,.86)),stroke=core?style.accent:base,ink=core||group?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;
    const rx=core?20:group?15:11;
    g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx,fill,stroke,'stroke-width':core?0:group?0:1.6}));
    const box=n.text,t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':core||group?style.titleFamily:style.fontFamily,'font-size':core?17:group?15:13.5,'font-weight':core?750:group?700:520,fill:ink});
