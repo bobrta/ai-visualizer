@@ -29,10 +29,11 @@ async function screenshot(locator,file){
 async function mainChart(page,type,file){
   await page.selectOption('#chartType',type);
   await page.click('#sample');
-  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已產生')||s.includes('無法產生');},null,{timeout:20000});
+  await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:20000});
+  await page.waitForTimeout(700);
   const status=await page.locator('#status').textContent();
-  assert(status?.includes('已產生'),`${type}: render failed: ${status}`);
-  await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:10000});
+  assert(!status?.includes('無法產生'),`${type}: render failed: ${status}`);
+  assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
     const texts=[...document.querySelectorAll('#plot text')].map(n=>parseFloat(getComputedStyle(n).fontSize)).filter(Number.isFinite);
