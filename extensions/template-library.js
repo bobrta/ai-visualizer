@@ -38,6 +38,7 @@
     all:new Set()
   };
   let active='recommended';
+  let advisorTypes=null;
   let mode='business';
   try{mode=localStorage.getItem(MODE_KEY)||'business';}catch{}
   let recents=[];
@@ -83,14 +84,14 @@
   function render(){
     const q=norm(search.value);let visible=0;
     cards.forEach(card=>{
-      const inCategory=active==='all'||(active==='recent'?recents.includes(card.dataset.type):active==='recommended'?recommended(card):card.dataset.category===active);
+      const inCategory=active==='all'||(active==='recent'?recents.includes(card.dataset.type):active==='advisor'?(advisorTypes?.has(card.dataset.type)??false):active==='recommended'?recommended(card):card.dataset.category===active);
       const hay=norm(card.dataset.name+' '+card.dataset.type+' '+card.dataset.desc+' '+card.textContent);
       const show=inCategory&&(!q||hay.includes(q));card.hidden=!show;
       card.classList.toggle('mode-recommended',recommended(card));if(show)visible++;
     });
     tabs.querySelectorAll('.category-tab').forEach(b=>b.classList.toggle('active',b.dataset.category===active));
     const labels={business:'商業簡報',research:'研究專題',learning:'學習整理',all:'全功能'};
-    count.textContent=(active==='recommended'?(labels[mode]+'推薦 · '):'')+visible+' / '+cards.length+' 種';
+    count.textContent=(active==='recommended'?(labels[mode]+'推薦 · '):active==='advisor'?'建議器結果 · ':'')+visible+' / '+cards.length+' 種';
     let empty=grid.querySelector('.empty-library');
     if(!visible){if(!empty){empty=document.createElement('div');empty.className='empty-library';grid.append(empty);}
       empty.textContent=active==='recent'&&!recents.length?'還沒有最近使用的圖形。':'找不到符合條件的圖形，試試較短的關鍵字。';
@@ -105,6 +106,6 @@
   search.addEventListener('input',render);
   search.addEventListener('keydown',e=>{if(e.key==='Escape'){search.value='';render();search.blur();}});
   $('templates')?.addEventListener('click',()=>requestAnimationFrame(()=>{search.focus();render();}));
-  window.VCTemplateLibrary={setMode,getMode:()=>mode,showRecommended:()=>{active='recommended';render();}};
+  window.VCTemplateLibrary={setMode,getMode:()=>mode,showRecommended:()=>{active='recommended';render();},showAdvisorTypes:(types)=>{advisorTypes=new Set(types||[]);active='advisor';search.value='';render();}};
   render();
 })();
