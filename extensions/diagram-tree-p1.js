@@ -3,7 +3,7 @@ const E=window.VCDiagramEngine;if(!E)return;
 const VERSION='1.1',NS='http://www.w3.org/2000/svg';
 const make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
 function stats(root){let count=0,maxDepth=0,maxLabel=0,maxChildren=0;const walk=(n,d)=>{count++;maxDepth=Math.max(maxDepth,d);maxLabel=Math.max(maxLabel,String(n?.name??n?.label??'').length);maxChildren=Math.max(maxChildren,(n?.children||[]).length);for(const c of n?.children||[])walk(c,d+1);};walk(root,0);return{count,maxDepth,maxLabel,maxChildren};}
-function plan(root,opts={}){const s=stats(root);return{...s,levelGap:Math.max(120,110+Math.min(72,s.maxLabel*2.4)+Math.min(30,s.maxDepth*6)),siblingGap:Math.max(30,s.maxChildren>=5?46:s.maxChildren>=3?38:32),maxNodeWidth:Math.max(opts.maxNodeWidth||290,s.maxLabel>24?360:s.maxLabel>16?330:300)};}
+function plan(root,opts={}){const s=stats(root);return{...s,levelGap:Math.max(120,110+Math.min(72,s.maxLabel*2.4)+Math.min(30,s.maxDepth*6)),siblingGap:Math.max(30,s.maxChildren>=5?46:s.maxChildren>=3?38:32),maxNodeWidth:Math.max(opts.maxNodeWidth||290,s.maxLabel>22?360:s.maxLabel>14?330:300)};}
 function render(root,width,height,style,{direction='LR',accent,edgeColor,maxNodeWidth=290}={}){
  const p=plan(root,{maxNodeWidth}),L=E.layoutTree(root,{direction,fontSize:15,maxNodeWidth:p.maxNodeWidth,levelGap:p.levelGap,siblingGap:p.siblingGap,padding:40});
  const svg=make('svg',{xmlns:NS,width,height,viewBox:`0 0 ${width} ${height}`}),defs=make('defs'),marker=make('marker',{id:'vcTreeArrowP1',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});
