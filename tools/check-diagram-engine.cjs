@@ -46,4 +46,33 @@ assert(Number.isFinite(fit.tx)&&Number.isFinite(fit.ty),'fit translation valid')
 const ir=E.normalizeIR({nodes:[{id:'a',label:'A'},{id:'b',label:'B'}],edges:[{source:'a',target:'b',label:'關係'}]});
 assert.equal(ir.nodes.length,2);assert.equal(ir.edges[0].label,'關係');
 
-console.log('PASS: Diagram Engine v1 text measurement, tree layout, collision, bounds and edge routing.');
+const networkData={nodes:[
+{id:'concept',name:'概念圖'},{id:'node',name:'知識概念節點'},{id:'arrow',name:'箭頭連線'},
+{id:'relation',name:'關係連接詞'},{id:'proposition',name:'有邏輯的命題'},{id:'mindmap',name:'心智圖'},
+{id:'network',name:'網狀／多對多連結'},{id:'logic',name:'因果、演變、系統邏輯'}
+],links:[
+{source:'concept',target:'node',relation:'整理'},{source:'concept',target:'arrow',relation:'用箭頭連接'},
+{source:'arrow',target:'relation',relation:'在線上標示'},{source:'node',target:'proposition',relation:'＋關係詞組成'},
+{source:'relation',target:'proposition',relation:'說明彼此關係'},{source:'concept',target:'network',relation:'著重'},
+{source:'concept',target:'logic',relation:'可呈現'},{source:'mindmap',target:'network',relation:'對照'}
+]};
+const net=E.layoutNetwork(networkData,{centerId:'concept',ringGap:170,nodeGap:24,padding:36});
+assert.equal(net.meta.hub,'concept','explicit network hub is preserved');
+assert.equal(net.nodes.length,8,'network node count');
+assert(net.bounds.width>0&&net.bounds.height>0,'network bounds valid');
+const hub=net.nodes.find(n=>n.id==='concept');
+assert(hub.level===0,'hub is level zero');
+for(let i=0;i<net.nodes.length;i++)for(let j=i+1;j<net.nodes.length;j++)assert(!E.rectOverlap(net.nodes[i],net.nodes[j],6),`network nodes overlap: ${net.nodes[i].id}/${net.nodes[j].id}`);
+const netMap=new Map(net.nodes.map(n=>[n.id,n]));
+for(const e of net.edges){
+ const r=E.routeNetworkEdge(netMap.get(e.source),netMap.get(e.target));
+ assert(r.d.includes(' Q '),'network uses quadratic curved routes');
+ const lp=E.placeEdgeLabel(r,e.label,net.nodes,{fontSize:11,maxWidth:130});
+ assert(Number.isFinite(lp.x)&&Number.isFinite(lp.y),'network label point valid');
+ for(const n of net.nodes)assert(!E.nodeContainsPoint(n,{x:lp.x,y:lp.y},-2),'edge label center should avoid node body');
+}
+const a=netMap.get('concept'),b=netMap.get('network');
+const r1=E.routeNetworkEdge(a,b,{index:0,total:2}),r2=E.routeNetworkEdge(b,a,{index:1,total:2});
+assert(r1.d!==r2.d,'parallel/opposite routes are separated');
+
+console.log('PASS: Diagram Engine v1 tree + network layout, collision, bounds, routing and edge-label placement.');
