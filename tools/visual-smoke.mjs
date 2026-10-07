@@ -93,6 +93,7 @@ async function researchDiagram(context,id,engine,file){
     const texts=svg?[...svg.querySelectorAll('text')].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};}):[];
     return {
       engine:svg?.dataset.engine||'',
+      layoutEngine:Boolean(window.VCResearchLayout),
       stage:stage&&{w:stage.clientWidth,h:stage.clientHeight},
       svg:sr&&{left:sr.left,top:sr.top,right:sr.right,bottom:sr.bottom,w:sr.width,h:sr.height},
       bad:svg?/NaN|Infinity|undefined/.test(svg.outerHTML):true,
@@ -100,6 +101,9 @@ async function researchDiagram(context,id,engine,file){
     };
   });
   assert(m.engine===engine,`${id}: expected ${engine}, got ${m.engine||'none'}`);
+  assert(m.layoutEngine,`${id}: Research Figure Layout engine missing`);
+  if(id==='why')assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
+  if(id==='concept')assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
   assert(m.stage?.w>300&&m.stage?.h>200,`${id}: invalid preview size`);
   assert(m.svg?.w>300&&m.svg?.h>200,`${id}: missing/undersized SVG`);
   assert(!m.bad,`${id}: SVG contains invalid numeric output`);
@@ -108,6 +112,57 @@ async function researchDiagram(context,id,engine,file){
   }
   await assertNoBodyOverflow(page,'research:'+id,10);
   await screenshot(page.locator('#paper'),file);
+  check();
+  await page.close();
+}
+
+async function researchGantt(context){
+  const page=await context.newPage(),check=await attachDiagnostics(page,'research:gantt');
+  await page.goto(`${BASE}/extensions/research-studio/index.html?template=gantt`,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
+  assert(await page.evaluate(()=>Boolean(window.VCResearchLayout)),'gantt: Research Figure Layout engine missing');
+  const planned=await page.evaluate(()=>{
+    const d=JSON.parse(document.querySelector('#json').value);
+    const [w,h]=document.querySelector('#size').value.split(',').map(Number);
+    const maxW=1180,maxH=760,scale=Math.min(1,maxW/w,maxH/h);
+    const base={width:Math.max(320,Math.round(w*scale)),height:Math.max(220,Math.round(h*scale))};
+    return VCResearchLayout.plan(d,base,w);
+  });
+  assert(planned.height>=360&&planned.height<=500,`gantt: bad planned height ${planned.height}`);
+  assert(planned.outputHeight<1900,`gantt: export figure still too tall ${planned.outputHeight}`);
+  await page.click('#render');
+  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:25000});
+  const status=await page.locator('#status').textContent();
+  if(!status?.includes('已完成')){
+    await page.screenshot({path:path.join(OUT,'debug-research-gantt.png'),fullPage:true,animations:'disabled'});
+    throw new Error('gantt: Research Studio render failed: '+status);
+  }
+  const m=await page.evaluate(()=>{
+    const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),paper=document.querySelector('#paper');
+    const caption=document.querySelector('#figureCaption')?.getBoundingClientRect();
+    const source=document.querySelector('#figureSource')?.getBoundingClientRect();
+    const sr=stage?.getBoundingClientRect();
+    const styles={caption:getComputedStyle(document.querySelector('#figureCaption')),source:getComputedStyle(document.querySelector('#figureSource'))};
+    return {
+      stageH:stage?.clientHeight||0,
+      stageW:stage?.clientWidth||0,
+      svg:Boolean(svg),
+      reason:stage?.dataset.layoutReason||'',
+      captionGap:caption&&sr?caption.top-sr.bottom:null,
+      sourceGap:caption&&source?source.top-caption.bottom:null,
+      captionMarginTop:parseFloat(styles.caption.marginTop),
+      sourceMarginTop:parseFloat(styles.source.marginTop),
+      paperH:paper?.getBoundingClientRect().height||0,
+      bad:svg?/NaN|Infinity|undefined/.test(svg.outerHTML):true
+    };
+  });
+  assert(m.svg,'gantt: SVG missing');
+  assert(m.reason==='gantt-content',`gantt: wrong layout reason ${m.reason}`);
+  assert(m.stageH>=360&&m.stageH<=500,`gantt: rendered stage remains oversized ${m.stageH}`);
+  assert(m.captionGap!==null&&m.captionGap<=16,`gantt: caption too far from chart ${m.captionGap}`);
+  assert(m.sourceGap!==null&&m.sourceGap<=12,`gantt: source too far from caption ${m.sourceGap}`);
+  assert(!m.bad,'gantt: SVG contains invalid output');
+  await screenshot(page.locator('#paper'),'research-gantt-adaptive.png');
   check();
   await page.close();
 }
@@ -348,6 +403,7 @@ try{
   await researchDiagram(context,'concept','vc-diagram-network-v1','research-concept.png');
   await researchDiagram(context,'flowchart','vc-diagram-flow-v1','research-flowchart.png');
   await researchDiagram(context,'stakeholder_system_map','vc-diagram-stakeholder-v1','research-stakeholder.png');
+  await researchGantt(context);
 
   const handbook=await context.newPage(),handbookCheck=await attachDiagnostics(handbook,'handbook');
   await handbook.goto(BASE+'/guides/chart-handbook/index.html',{waitUntil:'domcontentloaded'});
@@ -358,7 +414,7 @@ try{
   handbookCheck();
   await handbook.close();
 
-  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, Flow, Stakeholder and handbook.');
+  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, Flow, Stakeholder, adaptive Gantt and handbook.');
 }finally{
   await browser.close();
 }

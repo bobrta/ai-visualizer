@@ -66,6 +66,7 @@ jobs:
             extensions/research-studio/catalog.js
             extensions/research-studio/adapters.js
             extensions/research-studio/thinking.js
+            extensions/research-studio/layout.js
             extensions/research-studio/studio.js
           )
           for f in "${files[@]}"; do
@@ -107,6 +108,8 @@ jobs:
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1
         run: node tools/check-diagram-engine.cjs
+      - name: Check Research Figure Layout
+        run: node tools/check-research-layout.cjs
 
       - name: Verify referenced local assets
         shell: bash
