@@ -60,12 +60,12 @@ function avoidCollisions(nodes,{gap=18,iterations=80,axis='both'}={}){
  }
  return out;
 }
-function treeToIR(root,{fontSize=15,maxNodeWidth=290}={}){
+function treeToIR(root,{fontSize=15,maxNodeWidth=340}={}){
  let seq=0;const nodes=[],edges=[];
- function walk(node,depth,parent=null){const id='n'+seq++;const box=textBox(node.name??node.label??'',{fontSize,maxWidth:maxNodeWidth,minWidth:118,padX:18,padY:11,maxLines:4});nodes.push({id,label:String(node.name??node.label??''),level:depth,width:box.width,height:box.height,text:box,shape:depth===0?'rounded-strong':'rounded',data:node});if(parent)edges.push({id:'e'+edges.length,source:parent,target:id,label:String(node.relation??''),routeStyle:'curved',directed:true});for(const child of node.children||[])walk(child,depth+1,id);return id;}
+ function walk(node,depth,parent=null){const id='n'+seq++;const box=textBox(node.name??node.label??'',{fontSize,maxWidth:maxNodeWidth,minWidth:126,padX:20,padY:12,maxLines:5});nodes.push({id,label:String(node.name??node.label??''),level:depth,width:box.width,height:box.height,text:box,shape:depth===0?'rounded-strong':'rounded',data:node});if(parent)edges.push({id:'e'+edges.length,source:parent,target:id,label:String(node.relation??''),routeStyle:'curved',directed:true});for(const child of node.children||[])walk(child,depth+1,id);return id;}
  walk(root,0);return normalizeIR({nodes,edges,meta:{layout:'tree',direction:'LR'}});
 }
-function layoutTree(root,{direction='LR',fontSize=15,maxNodeWidth=290,levelGap=110,siblingGap=26,padding=36}={}){
+function layoutTree(root,{direction='LR',fontSize=15,maxNodeWidth=340,levelGap=130,siblingGap=32,padding=40}={}){
  const ir=treeToIR(root,{fontSize,maxNodeWidth}),byId=new Map(ir.nodes.map(n=>[n.id,n])),children=new Map(ir.nodes.map(n=>[n.id,[]]));
  for(const e of ir.edges)children.get(e.source).push(e.target);
  const maxDepth=Math.max(...ir.nodes.map(n=>n.level)),levelWidths=Array(maxDepth+1).fill(0);
@@ -117,45 +117,64 @@ function layoutNetwork(data,{fontSize=14,maxNodeWidth=220,ringGap=190,nodeGap=28
  const levels=bfsLevels(ir,hub),groups=new Map();
  for(const n of ir.nodes){const lv=levels.get(n.id)||0;(groups.get(lv)||groups.set(lv,[]).get(lv)).push(n);}
  const center={x:0,y:0},hubNode=ir.nodes.find(n=>n.id===hub);hubNode.x=0;hubNode.y=0;hubNode.level=0;
- const golden=Math.PI*(3-Math.sqrt(5));
+ const ringRadii={},hubRadius=Math.max(hubNode.width,hubNode.height)/2;
  for(const [lv,arr] of [...groups.entries()].sort((a,b)=>a[0]-b[0])){
    if(lv===0)continue;
-   const radius=ringGap*lv;
    const count=arr.length;
-   const phase=(lv%2?-.18:.18)*Math.PI;
    arr.sort((a,b)=>(deg.get(b.id)||0)-(deg.get(a.id)||0)||a.index-b.index);
+   const avgSpan=arr.reduce((sum,n)=>sum+Math.max(n.width,n.height*.9),0)/Math.max(1,count);
+   const circumferenceNeed=arr.reduce((sum,n)=>sum+Math.max(n.width*.92,n.height)+nodeGap*1.65,0);
+   const densityRadius=circumferenceNeed/(Math.PI*2*.72);
+   const safetyRadius=hubRadius+avgSpan*.58+nodeGap*2.1;
+   const radius=Math.max(ringGap*lv,safetyRadius+(lv-1)*ringGap,densityRadius+(lv-1)*ringGap*.72);
+   ringRadii[lv]=radius;
+   const phase=(-Math.PI/2)+(lv%2?Math.PI/Math.max(6,count):0);
    for(let i=0;i<count;i++){
-     const angle=count<=5?phase-0.78*Math.PI+(1.56*Math.PI)*(i/(Math.max(1,count-1))):phase+i*golden;
+     const angle=phase+(Math.PI*2*i/Math.max(1,count));
      arr[i].x=center.x+Math.cos(angle)*radius;
-     arr[i].y=center.y+Math.sin(angle)*radius*.78;
+     arr[i].y=center.y+Math.sin(angle)*radius*.84;
      arr[i].level=lv;
    }
  }
- let nodes=avoidCollisions(ir.nodes,{gap:nodeGap,iterations:120,axis:'both'});
- // keep hub stable after collision pass
+ let nodes=avoidCollisions(ir.nodes,{gap:nodeGap,iterations:180,axis:'both'});
  const movedHub=nodes.find(n=>n.id===hub);const dx=movedHub.x,dy=movedHub.y;
  nodes=nodes.map(n=>({...n,x:n.x-dx,y:n.y-dy}));
+ const safeCore=hubRadius+nodeGap*2.2;
+ nodes=nodes.map(n=>{
+   if(n.id===hub)return n;
+   const vx=n.x,vy=n.y,dist=Math.hypot(vx,vy)||1,minDist=safeCore+Math.max(n.width,n.height)/2;
+   return dist<minDist?{...n,x:vx/dist*minDist,y:vy/dist*minDist}:n;
+ });
+ nodes=avoidCollisions(nodes,{gap:nodeGap,iterations:90,axis:'both'});
+ const stableHub=nodes.find(n=>n.id===hub);const hx=stableHub.x,hy=stableHub.y;
+ nodes=nodes.map(n=>({...n,x:n.x-hx,y:n.y-hy}));
  let b=bounds(nodes,padding),shiftX=padding-b.x,shiftY=padding-b.y;
  nodes=nodes.map(n=>({...n,x:n.x+shiftX,y:n.y+shiftY}));
  b=bounds(nodes,padding);
- return {...ir,nodes,meta:{...ir.meta,padding,ringGap,nodeGap,hub},bounds:b};
+ return {...ir,nodes,meta:{...ir.meta,padding,ringGap,nodeGap,hub,ringRadii,coreSafetyRadius:safeCore},bounds:b};
 }
 function nodeContainsPoint(n,p,pad=8){return p.x>n.x-n.width/2-pad&&p.x<n.x+n.width/2+pad&&p.y>n.y-n.height/2-pad&&p.y<n.y+n.height/2+pad;}
-function routeNetworkEdge(source,target,{curve=.18,index=0,total=1}={}){
+function routeNetworkEdge(source,target,{curve=.18,index=0,total=1,edgeIndex=0}={}){
  const dx=target.x-source.x,dy=target.y-source.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
  const sx=source.x+ux*source.width*.48,sy=source.y+uy*source.height*.42;
  const tx=target.x-ux*target.width*.48,ty=target.y-uy*target.height*.42;
- const nx=-uy,ny=ux,spread=(index-(total-1)/2)*12,offset=clamp(len*curve+spread,18,70);
+ const nx=-uy,ny=ux,spread=Math.abs(index-(total-1)/2)*10,sign=((edgeIndex+index)%2===0?1:-1),offset=sign*clamp(len*curve+spread,22,84);
  const cx=(sx+tx)/2+nx*offset,cy=(sy+ty)/2+ny*offset;
  return {d:`M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`,s:{x:sx,y:sy},t:{x:tx,y:ty},control:{x:cx,y:cy},labelPoint:{x:(sx+2*cx+tx)/4,y:(sy+2*cy+ty)/4}};
 }
-function placeEdgeLabel(route,label,nodes,{fontSize=11,maxWidth=150}={}){
+function labelBoxAt(p,m,padX=8,padY=5){return {x:p.x,y:p.y,width:m.width+padX*2,height:m.height+padY*2};}
+function placeEdgeLabel(route,label,nodes,{fontSize=11,maxWidth=150,occupied=[]}={}){
  const m=wrapText(label,{fontSize,maxWidth,maxLines:2}),base={x:route.labelPoint.x,y:route.labelPoint.y};
  const dx=route.t.x-route.s.x,dy=route.t.y-route.s.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
- const candidates=[0,16,-16,28,-28,40,-40].map(k=>({x:base.x+nx*k,y:base.y+ny*k}));
+ const candidates=[0,18,-18,32,-32,48,-48,64,-64].map(k=>({x:base.x+nx*k,y:base.y+ny*k}));
  let best=candidates[0],score=Infinity;
- for(const p of candidates){let s=0;for(const n of nodes)if(nodeContainsPoint(n,p,Math.max(m.width/2,m.height/2)+6))s+=1000;s+=Math.abs(p.x-base.x)+Math.abs(p.y-base.y);if(s<score){score=s;best=p;}}
- return {...best,measure:m};
+ for(const p of candidates){
+   const box=labelBoxAt(p,m);let s=Math.abs(p.x-base.x)+Math.abs(p.y-base.y);
+   for(const n of nodes)if(rectOverlap(box,n,8))s+=2000;
+   for(const other of occupied)if(rectOverlap(box,other,8))s+=1500;
+   if(s<score){score=s;best=p;}
+ }
+ return {...best,measure:m,box:labelBoxAt(best,m)};
 }
 function renderNetworkSVG(data,width,height,style,{centerId=null,directed=true,maxNodeWidth=220}={}){
  if(typeof document==='undefined')throw Error('renderNetworkSVG 需要瀏覽器 DOM。');
@@ -164,22 +183,22 @@ function renderNetworkSVG(data,width,height,style,{centerId=null,directed=true,m
  const f=fitBounds(layout.bounds,width,height,30),g=make('g',{transform:`translate(${f.tx} ${f.ty}) scale(${f.scale})`});svg.append(g);
  const byId=new Map(layout.nodes.map(n=>[n.id,n])),pairCount=new Map();
  for(const e of layout.edges){const key=[e.source,e.target].sort().join('|');pairCount.set(key,(pairCount.get(key)||0)+1);}
- const pairSeen=new Map(),palette=typeof VCStyle!=='undefined'?VCStyle.palette():['#1F4E79'];
- for(const e of layout.edges){
+ const pairSeen=new Map(),palette=typeof VCStyle!=='undefined'?VCStyle.palette():['#1F4E79'],occupiedLabels=[];
+ for(const [edgeIndex,e] of layout.edges.entries()){
    const key=[e.source,e.target].sort().join('|'),idx=pairSeen.get(key)||0;pairSeen.set(key,idx+1);
-   const route=routeNetworkEdge(byId.get(e.source),byId.get(e.target),{index:idx,total:pairCount.get(key)||1});
+   const route=routeNetworkEdge(byId.get(e.source),byId.get(e.target),{index:idx,total:pairCount.get(key)||1,edgeIndex});
    const stroke=e.kind==='cause'?style.accent:style.muted;
    g.append(make('path',{d:route.d,fill:'none',stroke,'stroke-width':e.kind==='cause'?2.5:1.8,'stroke-opacity':.72,'marker-end':e.directed!==false&&directed?'url(#vcNetworkArrow)':''}));
    if(e.label){
-     const p=placeEdgeLabel(route,e.label,layout.nodes,{fontSize:11,maxWidth:150}),m=p.measure;
-     g.append(make('rect',{x:p.x-m.width/2-7,y:p.y-m.height/2-4,width:m.width+14,height:m.height+8,rx:7,fill:style.bg,'fill-opacity':.94}));
-     const t=make('text',{x:p.x,y:p.y-m.height/2+m.lineHeight*.8,'text-anchor':'middle','font-family':style.fontFamily,'font-size':11,fill:style.muted});
+     const p=placeEdgeLabel(route,e.label,layout.nodes,{fontSize:11,maxWidth:150,occupied:occupiedLabels}),m=p.measure;occupiedLabels.push(p.box);
+     g.append(make('rect',{class:'vc-edge-label-box','data-edge-label':e.id,x:p.x-m.width/2-8,y:p.y-m.height/2-5,width:m.width+16,height:m.height+10,rx:7,fill:style.bg,'fill-opacity':.95}));
+     const t=make('text',{class:'vc-edge-label-text',x:p.x,y:p.y-m.height/2+m.lineHeight*.8,'text-anchor':'middle','font-family':style.fontFamily,'font-size':11,fill:style.muted});
      m.lines.forEach((line,i)=>t.append(make('tspan',{x:p.x,dy:i?m.lineHeight:0},line)));g.append(t);
    }
  }
  for(const n of layout.nodes){
    const isHub=n.id===layout.meta.hub,color=isHub?style.accent:palette[n.index%palette.length],fill=isHub?style.accent:style.surface,ink=isHub?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;
-   g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:isHub?16:12,fill,stroke:color,'stroke-width':isHub?0:2}));
+   g.append(make('rect',{class:'vc-diagram-node','data-node-id':n.id,x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:isHub?16:12,fill,stroke:color,'stroke-width':isHub?0:2}));
    const box=n.text||textBox(n.label,{fontSize:14,maxWidth:n.width});
    const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':isHub?style.titleFamily:style.fontFamily,'font-size':isHub?16:14,'font-weight':isHub?700:550,fill:ink});
    box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);
@@ -380,14 +399,14 @@ function renderFlowSVG(input,width,height,style,{maxNodeWidth=260}={}){
 }
 
 function fitBounds(b,width,height,padding=24){const usableW=Math.max(1,width-padding*2),usableH=Math.max(1,height-padding*2),scale=Math.min(1,usableW/Math.max(1,b.width),usableH/Math.max(1,b.height));return {scale,tx:padding+(usableW-b.width*scale)/2-b.x*scale,ty:padding+(usableH-b.height*scale)/2-b.y*scale};}
-function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,maxNodeWidth=290}={}){
+function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,maxNodeWidth=340,levelGap=130,siblingGap=34,padding=40}={}){
  if(typeof document==='undefined')throw Error('renderTreeSVG 需要瀏覽器 DOM。');
- const layout=layoutTree(root,{direction,fontSize:15,maxNodeWidth,levelGap:110,siblingGap:28,padding:36}),NS='http://www.w3.org/2000/svg',make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
+ const layout=layoutTree(root,{direction,fontSize:15,maxNodeWidth,levelGap,siblingGap,padding}),NS='http://www.w3.org/2000/svg',make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
  const svg=make('svg',{xmlns:NS,width,height,viewBox:`0 0 ${width} ${height}`}),defs=make('defs'),marker=make('marker',{id:'vcDiagramArrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});marker.append(make('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:edgeColor||style.muted}));defs.append(marker);svg.append(defs);svg.append(make('rect',{width,height,fill:style.bg}));
  const f=fitBounds(layout.bounds,width,height,28),g=make('g',{transform:`translate(${f.tx} ${f.ty}) scale(${f.scale})`});svg.append(g);const byId=new Map(layout.nodes.map(n=>[n.id,n]));
  for(const e of layout.edges){const r=routeEdge(byId.get(e.source),byId.get(e.target),{style:e.routeStyle,direction});g.append(make('path',{d:r.d,fill:'none',stroke:edgeColor||style.grid,'stroke-width':2.2,'marker-end':'url(#vcDiagramArrow)'}));if(e.label){const m=wrapText(e.label,{fontSize:11,maxWidth:140,maxLines:2}),bg=make('rect',{x:r.labelPoint.x-m.width/2-6,y:r.labelPoint.y-m.height/2-4,width:m.width+12,height:m.height+8,rx:6,fill:style.bg});g.append(bg);const t=make('text',{x:r.labelPoint.x,y:r.labelPoint.y-m.height/2+m.lineHeight*.8,'text-anchor':'middle','font-family':style.fontFamily,'font-size':11,fill:style.muted});m.lines.forEach((line,i)=>t.append(make('tspan',{x:r.labelPoint.x,dy:i?m.lineHeight:0},line)));g.append(t);}}
  const palette=typeof VCStyle!=='undefined'?VCStyle.palette():[accent||'#1F4E79'];
- for(const n of layout.nodes){const strong=n.level===0,color=strong?(accent||style.accent):style.grid,fill=strong?(accent||style.accent):style.surface,ink=strong?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:strong?14:11,fill,stroke:color,'stroke-width':strong?0:1.4}));const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width});const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':strong?style.titleFamily:style.fontFamily,'font-size':strong?16:14,'font-weight':strong?700:500,fill:ink});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);}
+ for(const n of layout.nodes){const strong=n.level===0,color=strong?(accent||style.accent):style.grid,fill=strong?(accent||style.accent):style.surface,ink=strong?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;g.append(make('rect',{class:'vc-diagram-node','data-node-id':n.id,x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:strong?14:11,fill,stroke:color,'stroke-width':strong?0:1.4}));const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width});const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':strong?style.titleFamily:style.fontFamily,'font-size':strong?16:14,'font-weight':strong?700:500,fill:ink});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);}
  svg.dataset.engine='vc-diagram-v1';return svg;
 }
 const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,stakeholderToIR,layoutStakeholder,mixHex,routeStakeholderEdge,parseFlowchart,flowToIR,flowRanks,layoutFlow,flowPort,routeFlowEdge,diamondPoints,fitBounds,renderTreeSVG,renderNetworkSVG,renderStakeholderSVG,renderFlowSVG};
