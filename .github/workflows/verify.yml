@@ -46,6 +46,7 @@ jobs:
             extensions/annotation-layout.js
             extensions/accessibility.js
             extensions/emphasis.js
+            extensions/legend-intelligence.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
@@ -91,6 +92,8 @@ jobs:
         run: node tools/check-accessibility.cjs
       - name: Check presentation emphasis
         run: node tools/check-emphasis.cjs
+      - name: Check legend intelligence
+        run: node tools/check-legend-intelligence.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1
