@@ -188,6 +188,86 @@ function renderNetworkSVG(data,width,height,style,{centerId=null,directed=true,m
 }
 
 
+
+function stakeholderToIR(data,{fontSize=14,maxItemWidth=250}={}){
+ if(!data||typeof data.center!=='string'||!data.center.trim())throw Error('Stakeholder Map 需要 center。');
+ if(!Array.isArray(data.groups)||data.groups.length<2||data.groups.length>10)throw Error('Stakeholder Map 需要 2–10 個角色群組。');
+ const nodes=[],edges=[],centerBox=textBox(data.center,{fontSize:17,maxWidth:280,minWidth:170,padX:24,padY:17,maxLines:4});
+ nodes.push({id:'center',label:data.center,shape:'core',level:0,width:centerBox.width,height:centerBox.height,text:centerBox,group:null,index:0});
+ const ids=new Set(['center']);
+ data.groups.forEach((g,gi)=>{
+   const id=String(g.id||('group'+gi));if(ids.has(id))throw Error('Stakeholder group id 不可重複。');ids.add(id);
+   if(typeof g.name!=='string'||!g.name.trim())throw Error('每個角色群組需要 name。');
+   if(!Array.isArray(g.items)||!g.items.length||g.items.length>10)throw Error('每個角色需要 1–10 個功能。');
+   const box=textBox(g.name,{fontSize:15,maxWidth:220,minWidth:120,padX:19,padY:12,maxLines:3});
+   nodes.push({id,label:g.name,shape:'stakeholder',level:1,width:box.width,height:box.height,text:box,group:id,index:nodes.length,data:{groupIndex:gi}});
+   edges.push({id:'sg'+gi,source:'center',target:id,label:String(g.relation||''),kind:'stakeholder',directed:false,style:{groupIndex:gi}});
+   g.items.forEach((item,ii)=>{
+     const obj=typeof item==='string'?{name:item}:item,name=String(obj.name||obj.label||'').trim();if(!name)throw Error('角色功能名稱不可空白。');
+     const iid=id+'-item'+ii,ibox=textBox(name,{fontSize,maxWidth:maxItemWidth,minWidth:118,padX:16,padY:10,maxLines:4});
+     nodes.push({id:iid,label:name,shape:'capability',level:2,width:ibox.width,height:ibox.height,text:ibox,group:id,index:nodes.length,data:{groupIndex:gi,itemIndex:ii}});
+     edges.push({id:'si'+gi+'-'+ii,source:id,target:iid,label:String(obj.relation||''),kind:'capability',directed:false,style:{groupIndex:gi}});
+   });
+ });
+ return normalizeIR({nodes,edges,meta:{layout:'stakeholder',direction:'radial'}});
+}
+function layoutStakeholder(data,{groupRadius=270,itemRadius=235,padding=54,maxItemWidth=250}={}){
+ const ir=stakeholderToIR(data,{maxItemWidth}),center=ir.nodes.find(n=>n.id==='center'),groups=ir.nodes.filter(n=>n.level===1),items=ir.nodes.filter(n=>n.level===2);
+ center.x=0;center.y=0;
+ const n=groups.length,groupAngles=new Map();
+ groups.forEach((g,i)=>{
+   const angle=-Math.PI/2+i*(Math.PI*2/n);groupAngles.set(g.id,angle);
+   g.x=Math.cos(angle)*groupRadius;g.y=Math.sin(angle)*groupRadius*.76;
+ });
+ for(const g of groups){
+   const angle=groupAngles.get(g.id),children=items.filter(x=>x.group===g.id),count=children.length;
+   const spread=Math.min(.82,Math.max(.28,.16*count));
+   children.forEach((child,i)=>{
+     const offset=count===1?0:(i-(count-1)/2)*(spread/Math.max(1,count-1));
+     const a=angle+offset,radial=itemRadius+(count>5?25:0);
+     child.x=g.x+Math.cos(a)*radial;
+     child.y=g.y+Math.sin(a)*radial*.82;
+   });
+ }
+ let nodes=avoidCollisions(ir.nodes,{gap:22,iterations:180,axis:'both'});
+ const movedCenter=nodes.find(n=>n.id==='center'),dx=movedCenter.x,dy=movedCenter.y;
+ nodes=nodes.map(n=>({...n,x:n.x-dx,y:n.y-dy}));
+ let b=bounds(nodes,padding),sx=padding-b.x,sy=padding-b.y;
+ nodes=nodes.map(n=>({...n,x:n.x+sx,y:n.y+sy}));b=bounds(nodes,padding);
+ return {...ir,nodes,meta:{...ir.meta,groupRadius,itemRadius,padding,groupAngles:Object.fromEntries(groupAngles)},bounds:b};
+}
+function mixHex(a,b,t=.5){
+ const pa=String(a).replace('#','').match(/.{2}/g)?.map(x=>parseInt(x,16)),pb=String(b).replace('#','').match(/.{2}/g)?.map(x=>parseInt(x,16));if(!pa||!pb)return a;
+ return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join('');
+}
+function routeStakeholderEdge(source,target,{curve=.12}={}){
+ const dx=target.x-source.x,dy=target.y-source.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
+ const sw=Math.min(source.width,source.height)*.48,tw=Math.min(target.width,target.height)*.48;
+ const s={x:source.x+ux*sw,y:source.y+uy*sw},t={x:target.x-ux*tw,y:target.y-uy*tw},nx=-uy,ny=ux,bend=Math.min(44,len*curve),cx=(s.x+t.x)/2+nx*bend,cy=(s.y+t.y)/2+ny*bend;
+ return {d:`M ${s.x} ${s.y} Q ${cx} ${cy} ${t.x} ${t.y}`,s,t,labelPoint:{x:(s.x+2*cx+t.x)/4,y:(s.y+2*cy+t.y)/4}};
+}
+function renderStakeholderSVG(data,width,height,style,{maxItemWidth=250}={}){
+ if(typeof document==='undefined')throw Error('renderStakeholderSVG 需要瀏覽器 DOM。');
+ const layout=layoutStakeholder(data,{maxItemWidth}),NS='http://www.w3.org/2000/svg',make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
+ const svg=make('svg',{xmlns:NS,width,height,viewBox:`0 0 ${width} ${height}`});svg.append(make('rect',{width,height,fill:style.bg}));
+ const f=fitBounds(layout.bounds,width,height,34),g=make('g',{transform:`translate(${f.tx} ${f.ty}) scale(${f.scale})`});svg.append(g);
+ const byId=new Map(layout.nodes.map(n=>[n.id,n])),palette=typeof VCStyle!=='undefined'?VCStyle.palette():['#1F4E79','#176B69','#8B6F47','#8064A2','#B24A4A','#64748B'],white=style.bg||'#fff';
+ for(const e of layout.edges){
+   const s=byId.get(e.source),t=byId.get(e.target),gi=e.style?.groupIndex||0,color=palette[gi%palette.length],route=routeStakeholderEdge(s,t,{curve:e.kind==='stakeholder'?.08:.13});
+   g.append(make('path',{d:route.d,fill:'none',stroke:color,'stroke-width':e.kind==='stakeholder'?3:2,'stroke-opacity':e.kind==='stakeholder'?.78:.58,'stroke-linecap':'round'}));
+   if(e.label){const p=placeEdgeLabel(route,e.label,layout.nodes,{fontSize:10,maxWidth:120}),m=p.measure;g.append(make('rect',{x:p.x-m.width/2-5,y:p.y-m.height/2-3,width:m.width+10,height:m.height+6,rx:6,fill:white,'fill-opacity':.96}));const tx=make('text',{x:p.x,y:p.y-m.height/2+m.lineHeight*.8,'text-anchor':'middle','font-family':style.fontFamily,'font-size':10,fill:style.muted});m.lines.forEach((line,i)=>tx.append(make('tspan',{x:p.x,dy:i?m.lineHeight:0},line)));g.append(tx);}
+ }
+ for(const n of layout.nodes){
+   const core=n.level===0,group=n.level===1,gi=n.data?.groupIndex||0,base=palette[gi%palette.length];
+   const fill=core?style.accent:group?base:mixHex(base,style.bg,.86),stroke=core?style.accent:base,ink=core||group?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;
+   const rx=core?20:group?15:11;
+   g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx,fill,stroke,'stroke-width':core?0:group?0:1.6}));
+   const box=n.text,t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':core||group?style.titleFamily:style.fontFamily,'font-size':core?17:group?15:13.5,'font-weight':core?750:group?700:520,fill:ink});
+   box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);
+ }
+ svg.dataset.engine='vc-diagram-stakeholder-v1';return svg;
+}
+
 function parseFlowchart(code){
  const text=String(code||'').replace(/\r/g,''),lines=text.split('\n').map(x=>x.trim()).filter(Boolean);
  if(!lines.length||!/^\s*(flowchart|graph)\b/i.test(lines[0]))throw Error('Flow Engine 需要 Mermaid flowchart / graph 語法。');
@@ -310,6 +390,6 @@ function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,
  for(const n of layout.nodes){const strong=n.level===0,color=strong?(accent||style.accent):style.grid,fill=strong?(accent||style.accent):style.surface,ink=strong?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:strong?14:11,fill,stroke:color,'stroke-width':strong?0:1.4}));const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width});const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':strong?style.titleFamily:style.fontFamily,'font-size':strong?16:14,'font-weight':strong?700:500,fill:ink});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);}
  svg.dataset.engine='vc-diagram-v1';return svg;
 }
-const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,parseFlowchart,flowToIR,flowRanks,layoutFlow,flowPort,routeFlowEdge,diamondPoints,fitBounds,renderTreeSVG,renderNetworkSVG,renderFlowSVG};
+const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,stakeholderToIR,layoutStakeholder,mixHex,routeStakeholderEdge,parseFlowchart,flowToIR,flowRanks,layoutFlow,flowPort,routeFlowEdge,diamondPoints,fitBounds,renderTreeSVG,renderNetworkSVG,renderStakeholderSVG,renderFlowSVG};
 if(typeof window!=='undefined')window.VCDiagramEngine=API;if(typeof module!=='undefined'&&module.exports)module.exports=API;
 })();
