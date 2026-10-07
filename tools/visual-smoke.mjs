@@ -112,12 +112,12 @@ async function researchDiagram(context,id,engine,file){
   assert(m.layoutEngine,`${id}: Research Figure Layout engine missing`);
   if(id==='why'){
     assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.treeP1&&m.layoutVersion==='p1',`${id}: Why P1 layout override missing`);
+    assert(m.treeP1&&m.layoutVersion==='p2',`${id}: Why P2 layout override missing`);
     assert(m.treeLevelGap>=120&&m.treeSiblingGap>=30,`${id}: adaptive tree gaps missing ${m.treeLevelGap}/${m.treeSiblingGap}`);
   }
   if(id==='concept'){
     assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.networkP1&&m.layoutVersion==='p1',`${id}: Concept P1 layout override missing`);
+    assert(m.networkP1&&m.layoutVersion==='p2',`${id}: Concept P2 layout override missing`);
     const overlaps=(arr,gap=1)=>{let n=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){const a=arr[i],b=arr[j];if(a.left<b.right-gap&&a.right>b.left+gap&&a.top<b.bottom-gap&&a.bottom>b.top+gap)n++;}return n;};
     assert(overlaps(m.nodes,2)===0,`${id}: rendered nodes overlap`);
     assert(overlaps(m.edgeLabels,1)===0,`${id}: rendered relation labels overlap`);
@@ -129,6 +129,74 @@ async function researchDiagram(context,id,engine,file){
     assert(t.left>=m.svg.left-3&&t.right<=m.svg.right+3&&t.top>=m.svg.top-3&&t.bottom<=m.svg.bottom+3,`${id}: text clipped outside SVG`);
   }
   await assertNoBodyOverflow(page,'research:'+id,10);
+  await screenshot(page.locator('#paper'),file);
+  check();
+  await page.close();
+}
+
+async function researchDenseDiagram(context,id,file){
+  const page=await context.newPage(),check=await attachDiagnostics(page,'research:dense:'+id);
+  await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
+  await page.evaluate(kind=>{
+    const input=document.querySelector('#json'),d=JSON.parse(input.value);
+    if(kind==='concept'){
+      d.data={
+        nodes:[{id:'concept',name:'中央核心概念：高密度研究架構'},...Array.from({length:16},(_,i)=>({id:'dense'+i,name:'長概念節點 '+(i+1)+'：自動換行、完整圓環與安全距離驗證'}))],
+        links:Array.from({length:16},(_,i)=>({source:'concept',target:'dense'+i,relation:'關係 '+(i+1)+'：驗證避讓'}))
+      };
+      d.title='Concept 高密度回歸測試';
+    }else{
+      d.data={root:{name:'問題：高密度 Why 分析與長文字節點排版',children:Array.from({length:4},(_,i)=>({name:'主要原因 '+(i+1)+'：需要足夠層級間距',children:Array.from({length:3},(_,j)=>({name:'次要原因 '+(i+1)+'-'+(j+1)+'：較長文字驗證自動換行與 sibling gap'}))}))}};
+      d.title='Why 高密度回歸測試';
+    }
+    input.value=JSON.stringify(d,null,2);
+    document.querySelector('#title').value=d.title;
+  },id);
+  await page.click('#render');
+  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
+  const status=await page.locator('#status').textContent();
+  if(!status?.includes('已完成')){
+    await page.screenshot({path:path.join(OUT,`debug-research-dense-${id}.png`),fullPage:true,animations:'disabled'});
+    throw new Error(`dense ${id}: render failed: ${status}`);
+  }
+  const m=await page.evaluate(kind=>{
+    const svg=document.querySelector('#stage svg'),stage=document.querySelector('#stage');
+    const rects=sel=>[...svg.querySelectorAll(sel)].map(n=>{const r=n.getBoundingClientRect();return{id:n.dataset.nodeId||'',left:r.left,top:r.top,right:r.right,bottom:r.bottom,cx:(r.left+r.right)/2,cy:(r.top+r.bottom)/2};});
+    const nodes=rects('[data-node="1"]'),labels=rects('[data-edge-label-box="1"]');
+    const overlap=(a,b,pad=1)=>a.left<b.right-pad&&a.right>b.left+pad&&a.top<b.bottom-pad&&a.bottom>b.top+pad;
+    let nodeOverlap=0,labelNodeOverlap=0,labelLabelOverlap=0;
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)if(overlap(nodes[i],nodes[j],1))nodeOverlap++;
+    for(const l of labels)for(const n of nodes)if(overlap(l,n,1))labelNodeOverlap++;
+    for(let i=0;i<labels.length;i++)for(let j=i+1;j<labels.length;j++)if(overlap(labels[i],labels[j],1))labelLabelOverlap++;
+    let quadrants=0;
+    if(kind==='concept'){
+      const hub=nodes.find(n=>n.id==='concept'),q=new Set();
+      for(const n of nodes.filter(n=>n.id!=='concept'))q.add((n.cx>=hub.cx?'R':'L')+(n.cy>=hub.cy?'B':'T'));
+      quadrants=q.size;
+    }
+    return {
+      layoutVersion:svg?.dataset.layoutVersion||'',
+      stageH:stage?.clientHeight||0,nodeCount:nodes.length,labelCount:labels.length,
+      nodeOverlap,labelNodeOverlap,labelLabelOverlap,quadrants,
+      bad:/NaN|Infinity|undefined/.test(svg?.outerHTML||'')
+    };
+  },id);
+  assert(m.layoutVersion==='p2',`dense ${id}: P2 layout not active`);
+  assert(!m.bad,`dense ${id}: invalid SVG numeric output`);
+  assert(m.nodeOverlap===0,`dense ${id}: ${m.nodeOverlap} node collisions`);
+  if(id==='concept'){
+    assert(m.nodeCount===17,`dense concept: expected 17 nodes, got ${m.nodeCount}`);
+    assert(m.labelCount===16,`dense concept: expected 16 labels, got ${m.labelCount}`);
+    assert(m.quadrants===4,`dense concept: nodes do not span full 360 degrees (${m.quadrants} quadrants)`);
+    assert(m.labelNodeOverlap===0,`dense concept: ${m.labelNodeOverlap} relation labels overlap nodes`);
+    assert(m.labelLabelOverlap===0,`dense concept: ${m.labelLabelOverlap} relation labels overlap each other`);
+    assert(m.stageH>=580&&m.stageH<=700,`dense concept: unexpected adaptive height ${m.stageH}`);
+  }else{
+    assert(m.nodeCount===17,`dense why: expected 17 nodes, got ${m.nodeCount}`);
+    assert(m.stageH>=650&&m.stageH<=700,`dense why: unexpected adaptive height ${m.stageH}`);
+  }
+  await assertNoBodyOverflow(page,'research:dense:'+id,10);
   await screenshot(page.locator('#paper'),file);
   check();
   await page.close();
@@ -419,6 +487,8 @@ try{
 
   await researchDiagram(context,'why','vc-diagram-v1','research-why.png');
   await researchDiagram(context,'concept','vc-diagram-network-v1','research-concept.png');
+  await researchDenseDiagram(context,'why','research-why-dense.png');
+  await researchDenseDiagram(context,'concept','research-concept-dense.png');
   await researchDiagram(context,'flowchart','vc-diagram-flow-v1','research-flowchart.png');
   await researchDiagram(context,'stakeholder_system_map','vc-diagram-stakeholder-v1','research-stakeholder.png');
   await researchGantt(context);
@@ -432,7 +502,7 @@ try{
   handbookCheck();
   await handbook.close();
 
-  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, Flow, Stakeholder, adaptive Gantt and handbook.');
+  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, dense Why/Concept, Flow, Stakeholder, adaptive Gantt and handbook.');
 }finally{
   await browser.close();
 }
