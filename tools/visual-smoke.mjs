@@ -60,6 +60,7 @@ async function mainChart(page,type,file){
   assert(await page.evaluate(()=>Boolean(window.VCAccessibility)),`${type}: Accessibility engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCEmphasis)),`${type}: Emphasis engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCLegendIntelligence)),`${type}: Legend Intelligence engine missing`);
+  assert(await page.evaluate(()=>Boolean(window.VCExecutiveSummary)),`${type}: Executive Summary engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -143,6 +144,39 @@ try{
   assert(insightUI.status.includes('洞察'),'bar: insight count missing from status');
   assert(insightUI.status.includes('標註配置'),'bar: annotation placement count missing from status');
   await screenshot(main.locator('#plot'),'main-bar-insight.png');
+  const executiveUI=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    mode:document.querySelector('#executiveSummaryMode')?.value,
+    disabled:document.querySelector('#executiveSummaryMode')?.disabled,
+    kpiCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length,
+    paperHeadings:(document.querySelector('#plot')?.layout?.annotations||[]).filter(a=>a.xref==='paper'&&Number(a.y)>1.2).length,
+    sourceEngine:Boolean(window.VCExecutiveSummary)
+  }));
+  assert(executiveUI.sourceEngine,'bar: Executive Summary engine missing');
+  assert(executiveUI.mode==='executive'&&!executiveUI.disabled,'bar: business mode should default to executive page');
+  assert(executiveUI.status.includes('簡報頁'),'bar: executive-page status missing');
+  assert(executiveUI.kpiCards>=2,'bar: KPI cards missing from Plotly layout');
+  assert(executiveUI.paperHeadings>=1,'bar: executive headline missing');
+  await screenshot(main.locator('#plot'),'main-executive-summary.png');
+
+  await main.selectOption('#executiveSummaryMode','chart');
+  await main.waitForTimeout(900);
+  const chartOnly=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    mode:document.querySelector('#executiveSummaryMode')?.value,
+    kpiCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length
+  }));
+  assert(chartOnly.mode==='chart','bar: chart-only selector did not switch');
+  assert(!chartOnly.status.includes('簡報頁'),'bar: chart-only mode still reports executive page');
+  assert(chartOnly.kpiCards===0,'bar: KPI cards remained in chart-only mode');
+
+  await main.selectOption('#executiveSummaryMode','executive');
+  await main.waitForTimeout(900);
+  const executiveBack=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    cards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length
+  }));
+  assert(executiveBack.status.includes('簡報頁')&&executiveBack.cards>=2,'bar: executive page did not restore after toggle');
   await main.selectOption('#chartType','grouped_bar');
   await main.click('#sample');
   await main.click('#generate');
