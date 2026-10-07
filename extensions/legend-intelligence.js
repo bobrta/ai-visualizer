@@ -96,7 +96,7 @@ function apply(d,r){
  }
 
  const legendCount=traces.filter(t=>t.showlegend!==false&&t.name).length;
- if(legendCount>10){
+ if(legendCount>10||traces.length>10){
    layout.legend={...(layout.legend||{}),orientation:'v',x:1.02,xanchor:'left',y:1,yanchor:'top',font:{...(layout.legend?.font||{}),size:9}};
    layout.margin={...(layout.margin||{}),r:Math.max(layout.margin?.r||0,175)};
    add('legend-overflow','圖例超過 10 項，移到右側並保留閱讀空間');
