@@ -71,7 +71,11 @@ async function researchDiagram(context,id,engine,file){
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
   await page.click('#render');
-  await page.waitForFunction(()=>document.querySelector('#status')?.textContent.includes('已完成'),null,{timeout:20000});
+  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
+  const researchStatus=await page.locator('#status').textContent();
+  const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length}));
+  console.log('RESEARCH-DIAG',id,JSON.stringify(researchDiag));
+  if(!researchStatus?.includes('已完成')){await page.screenshot({path:path.join(OUT,`debug-research-${id}.png`),fullPage:true,animations:'disabled'});throw new Error(`${id}: Research Studio render failed: ${researchStatus}`);}
   const m=await page.evaluate(()=>{
     const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),sr=svg?.getBoundingClientRect();
     const texts=svg?[...svg.querySelectorAll('text')].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};}):[];
