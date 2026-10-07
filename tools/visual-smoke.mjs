@@ -56,6 +56,7 @@ async function mainChart(page,type,file){
   const smart=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent||'',hasEngine:Boolean(window.VCSmartLayout)}));
   assert(smart.hasEngine,`${type}: Smart Layout engine missing`);
   assert(smart.status.includes('自動調整'),`${type}: Smart Layout did not report adjustments`);
+  assert(await page.evaluate(()=>Boolean(window.VCAutoInsight)),`${type}: Auto Insight engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -120,6 +121,21 @@ try{
   await assertNoBodyOverflow(main,'main',8);
   await mainChart(main,'parallel','main-parallel.png');
   await mainChart(main,'scatter3d','main-scatter3d.png');
+  await main.selectOption('#chartType','bar');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const insightUI=await main.evaluate(()=>({
+    hidden:document.querySelector('#insightPanel')?.hidden,
+    items:document.querySelectorAll('#insightPanel .insight-item').length,
+    annotations:(document.querySelector('#plot')?.layout?.annotations||[]).length,
+    status:document.querySelector('#status')?.textContent||''
+  }));
+  assert(insightUI.hidden===false&&insightUI.items>=1,'bar: Auto Insight panel missing');
+  assert(insightUI.annotations>=1,'bar: Plotly annotation missing');
+  assert(insightUI.status.includes('洞察'),'bar: insight count missing from status');
+  await screenshot(main.locator('#plot'),'main-bar-insight.png');
   mainCheck();
   await main.close();
 
