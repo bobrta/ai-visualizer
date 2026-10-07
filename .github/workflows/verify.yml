@@ -44,6 +44,7 @@ jobs:
             extensions/smart-layout.js
             extensions/auto-insight.js
             extensions/annotation-layout.js
+            extensions/accessibility.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
@@ -85,6 +86,8 @@ jobs:
         run: node tools/check-auto-insight.cjs
       - name: Check annotation placement
         run: node tools/check-annotation-layout.cjs
+      - name: Check accessibility
+        run: node tools/check-accessibility.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1
