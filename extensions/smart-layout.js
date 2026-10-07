@@ -62,7 +62,7 @@ function apply(d,r){
    if(trace){
      const domain=n<=2?[.16,.84]:n<=5?[.08,.92]:n<=8?[.04,.96]:[.02,.98];
      trace.domain={...(trace.domain||{}),x:domain,y:[.08,.92]};
-     const label=n>10?10:n>7?11:n<=3?14:12,tick=n>10?8:n>7?9:10;
+     const label=n>=10?10:n>=8?11:n<=3?14:12,tick=n>=10?8:n>=8?9:10;
      trace.labelfont={...(trace.labelfont||{}),size:label};trace.tickfont={...(trace.tickfont||{}),size:tick};trace.rangefont={...(trace.rangefont||{}),size:tick};
      layout.margin={...(layout.margin||{}),l:n>8?28:48,r:n>8?28:48,b:48,t:92};add('parallel-domain','依維度數調整平行座標間距與字級');
    }
