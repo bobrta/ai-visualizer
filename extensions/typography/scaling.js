@@ -12,7 +12,6 @@ function changes(s){const g=s.g,box=rectangle(g),viewport=clamp(Math.min(box.wid
  u['font.size']=special?clamp(fonts*multiplier,11,18):scaled(fonts);u['title.font.size']=scaled(s.layout.title?.font?.size||22,1,special?34:144);u['legend.font.size']=scaled(s.layout.legend?.font?.size||12,1,special?18:144);
  for(const key of ['xaxis','yaxis','yaxis2']){if(key==='yaxis2'&&!s.layout.yaxis2)continue;u[key+'.tickfont.size']=scaled(s.layout[key]?.tickfont?.size||12,1,special?18:144);u[key+'.title.font.size']=scaled(s.layout[key]?.title?.font?.size||14,1,special?20:144);}
  if(s.has3d){for(const key of ['xaxis','yaxis','zaxis']){u['scene.'+key+'.tickfont.size']=clamp((s.layout.scene?.[key]?.tickfont?.size||11)*multiplier,9,14);u['scene.'+key+'.title.font.size']=clamp((s.layout.scene?.[key]?.title?.font?.size||13)*multiplier,10,16);}}
- if(s.hasParcoords){for(let i=0;i<s.traces.length;i++)if(s.traces[i].type==='parcoords'){u['_parcoords_'+i]=true;}}
  (s.layout.annotations||[]).forEach((a,i)=>{const xr=a.xref||'x',yr=a.yref||'y';const k=xr==='x'&&yr==='y'?Math.min(x,y):xr==='x'?x:yr==='y'?y:1;if(a.text)u['annotations['+i+'].font.size']=scaled(a.font?.size||fonts,k);if(a.showarrow)u['annotations['+i+'].arrowwidth']=clamp((a.arrowwidth||2)*viewport*k,1,12);});
  return {layout:u,viewport,zoom:Math.min(x,y),scaled};}
 async function update(){const s=state;if(!s)return;const serial=++revision;const c=changes(s),signature=JSON.stringify(c.layout);if(signature===s.signature)return;s.signature=signature;s.busy=true;
