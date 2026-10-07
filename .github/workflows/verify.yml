@@ -49,7 +49,7 @@ jobs:
             extensions/accessibility.js
             extensions/emphasis.js
             extensions/legend-intelligence.js
-            extensions/executive-summary.js
+            extensions/executive-summary-v2.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
