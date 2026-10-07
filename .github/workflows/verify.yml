@@ -128,7 +128,7 @@ jobs:
       - name: Browser visual smoke
         env:
           VC_BASE_URL: http://127.0.0.1:4173
-        run: npm run test:visual
+        run: xvfb-run -a --server-args="-screen 0 1440x900x24" npm run test:visual
 
       - name: Upload visual screenshots
         if: always()
