@@ -40,7 +40,24 @@ function bounds(nodes,padding=0){
 function rectOverlap(a,b,gap=0){return Math.abs(a.x-b.x)<(a.width+b.width)/2+gap&&Math.abs(a.y-b.y)<(a.height+b.height)/2+gap;}
 function avoidCollisions(nodes,{gap=18,iterations=80,axis='both'}={}){
  const out=nodes.map(n=>({...n}));
- for(let it=0;it<iterations;it++){let moved=false;for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){const a=out[i],b=out[j];if(!rectOverlap(a,b,gap))continue;const dx=b.x-a.x,dy=b.y-a.y,ox=(a.width+b.width)/2+gap-Math.abs(dx),oy=(a.height+b.height)/2+gap-Math.abs(dy);if((axis==='x'||(axis==='both'&&ox<oy))&&ox>0){const s=dx>=0?1:-1;a.x-=s*ox/2;b.x+=s*ox/2;}else if(axis!=='x'&&oy>0){const s=dy>=0?1:-1;a.y-=s*oy/2;b.y+=s*oy/2;}moved=true;}}if(!moved)break;}
+ for(let it=0;it<iterations;it++){
+   let moved=false;
+   for(let i=0;i<out.length;i++){
+     for(let j=i+1;j<out.length;j++){
+       const a=out[i],b=out[j];
+       if(!rectOverlap(a,b,gap))continue;
+       const dx=b.x-a.x,dy=b.y-a.y;
+       const ox=(a.width+b.width)/2+gap-Math.abs(dx),oy=(a.height+b.height)/2+gap-Math.abs(dy);
+       if((axis==='x'||(axis==='both'&&ox<oy))&&ox>0){
+         const sign=dx>=0?1:-1;a.x-=sign*ox/2;b.x+=sign*ox/2;
+       }else if(axis!=='x'&&oy>0){
+         const sign=dy>=0?1:-1;a.y-=sign*oy/2;b.y+=sign*oy/2;
+       }
+       moved=true;
+     }
+   }
+   if(!moved)break;
+ }
  return out;
 }
 function treeToIR(root,{fontSize=15,maxNodeWidth=290}={}){
