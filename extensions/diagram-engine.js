@@ -62,7 +62,7 @@ function avoidCollisions(nodes,{gap=18,iterations=80,axis='both'}={}){
 }
 function treeToIR(root,{fontSize=15,maxNodeWidth=290}={}){
  let seq=0;const nodes=[],edges=[];
- function walk(node,depth,parent=null){const id='n'+seq++;const box=textBox(node.name??node.label??'',{fontSize,maxWidth:maxNodeWidth,minWidth:118,padX:18,padY:11,maxLines:4});nodes.push({id,label:String(node.name??node.label??''),level:depth,width:box.width,height:box.height,text:box,shape:depth===0?'rounded-strong':'rounded',data:node});if(parent)edges.push({id:'e'+edges.length,source:parent,target:id,label:String(node.relation??''),routeStyle:'curved',directed:true});for(const child of node.children||[])walk(child,depth+1,id);return id;}
+ function walk(node,depth,parent=null){const id='n'+seq++;const box=textBox(node.name??node.label??'',{fontSize,maxWidth:maxNodeWidth,minWidth:118,padX:18,padY:11,maxLines:5});nodes.push({id,label:String(node.name??node.label??''),level:depth,width:box.width,height:box.height,text:box,shape:depth===0?'rounded-strong':'rounded',data:node});if(parent)edges.push({id:'e'+edges.length,source:parent,target:id,label:String(node.relation??''),routeStyle:'curved',directed:true});for(const child of node.children||[])walk(child,depth+1,id);return id;}
  walk(root,0);return normalizeIR({nodes,edges,meta:{layout:'tree',direction:'LR'}});
 }
 function layoutTree(root,{direction='LR',fontSize=15,maxNodeWidth=290,levelGap=110,siblingGap=26,padding=36}={}){
@@ -92,7 +92,7 @@ function routeEdge(source,target,{style='curved',direction='LR',bend=0.5}={}){
 }
 
 function networkToIR(data,{fontSize=14,maxNodeWidth=220}={}){
- const nodes=(data.nodes||[]).map((n,i)=>{const box=textBox(n.name??n.label??n.id,{fontSize,maxWidth:maxNodeWidth,minWidth:96,padX:16,padY:10,maxLines:3});return {id:String(n.id),label:String(n.name??n.label??n.id),width:box.width,height:box.height,text:box,group:n.group??null,style:n.style||{},data:n,index:i};});
+ const nodes=(data.nodes||[]).map((n,i)=>{const box=textBox(n.name??n.label??n.id,{fontSize,maxWidth:maxNodeWidth,minWidth:96,padX:16,padY:10,maxLines:4});return {id:String(n.id),label:String(n.name??n.label??n.id),width:box.width,height:box.height,text:box,group:n.group??null,style:n.style||{},data:n,index:i};});
  const edges=(data.links||[]).map((e,i)=>({id:String(e.id||('e'+i)),source:String(e.source),target:String(e.target),label:String(e.relation??e.label??''),kind:e.kind||'relation',directed:e.directed!==false,routeStyle:'curved',style:e.style||{}}));
  return normalizeIR({nodes,edges,meta:{layout:'network',direction:'radial'}});
 }

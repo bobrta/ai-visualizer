@@ -12,8 +12,11 @@ for(let i=1;i<18;i++)links.push({source:'n0',target:'n'+i,relation:'關係 '+i})
 for(let i=1;i<10;i++)links.push({source:'n'+i,target:'n'+(i+8),relation:'延伸 '+i});
 const L=N.spreadNetwork({nodes,links},{centerId:'n0'});
 assert.equal(L.meta.hub,'n0');
-assert(L.meta.ringGap>=300,'dense network expands ring gap');
+assert.equal(L.meta.layoutVersion,'p2','second-batch network layout active');
+assert(L.meta.ringGap>=300,'dense network expands base ring gap');
+assert(L.meta.ringRadii[1]>=L.meta.ringGap,'first ring respects density-aware radius');
 assert(L.meta.nodeGap>=40,'dense network expands node gap');
+assert(L.meta.maxNodeWidth>=220,'network reports adaptive node width');
 const hub=L.nodes.find(n=>n.id==='n0');
 for(const n of L.nodes){
  if(n.id==='n0')continue;
@@ -24,11 +27,27 @@ let overlaps=0;
 for(let i=0;i<L.nodes.length;i++)for(let j=i+1;j<L.nodes.length;j++)if(E.rectOverlap(L.nodes[i],L.nodes[j],4))overlaps++;
 assert.equal(overlaps,0,'network nodes should not overlap');
 
+const firstRing=L.nodes.filter(n=>n.level===1),quadrants=new Set(firstRing.map(n=>{
+ const dx=n.x-hub.x,dy=n.y-hub.y;return (dx>=0?'R':'L')+(dy>=0?'B':'T');
+}));
+assert.equal(quadrants.size,4,'first ring spans all four quadrants / full 360 degrees');
+
 const a=L.nodes[1],b=L.nodes[2],route=N.routeEdge(a,b,1);
 const first=N.placeLabel(route,'第一個關係詞',L.nodes,[]);
 const second=N.placeLabel(route,'第二個關係詞',L.nodes,[first.box]);
 assert(first.box&&second.box,'edge label boxes returned');
-assert(!E.rectOverlap(first.box,second.box,6)||second.score>=first.score,'second label considers occupied labels');
+assert(!E.rectOverlap(first.box,second.box,2),'occupied relation labels avoid each other');
+
+const longData={nodes:[{id:'hub',name:'中央核心概念：高密度研究架構'},...Array.from({length:20},(_,i)=>({id:'d'+i,name:'很長的概念節點 '+(i+1)+'：自動換行並增寬以維持可讀性'}))],links:Array.from({length:20},(_,i)=>({source:'hub',target:'d'+i,relation:'關係 '+(i+1)}))};
+const dense=N.spreadNetwork(longData,{centerId:'hub',maxNodeWidth:240});
+assert(dense.meta.ringRadii[1]>dense.meta.ringGap,'high-density first ring grows beyond base ring gap');
+assert(dense.meta.maxNodeWidth>=270,'long node text increases maximum node width');
+const denseHub=dense.nodes.find(n=>n.id==='hub');
+for(const n of dense.nodes.filter(n=>n.id!=='hub')){
+ const d=Math.hypot(n.x-denseHub.x,(n.y-denseHub.y)/.84);
+ assert(d>=dense.meta.hubSafeRadius-2,'dense node violates center safety radius');
+}
+for(let i=0;i<dense.nodes.length;i++)for(let j=i+1;j<dense.nodes.length;j++)assert(!E.rectOverlap(dense.nodes[i],dense.nodes[j],4),`dense network overlap: ${dense.nodes[i].id}/${dense.nodes[j].id}`);
 
 const tree={name:'這是一個很長的核心研究問題文字',children:[
  {name:'第一條可能原因與說明',children:[{name:'次層原因 A'},{name:'次層原因 B'}]},
@@ -43,4 +62,10 @@ assert(p.siblingGap>=46,'five siblings expand sibling gap');
 assert(p.maxNodeWidth>=330,'long labels expand node width');
 assert.equal(T.stats(tree).count,8);
 
-console.log('PASS: P1 network hub safety, collision avoidance, edge-label occupancy and adaptive Why spacing.');
+const denseTree={name:'問題：高密度 Why 分析與長文字節點排版',children:Array.from({length:5},(_,i)=>({name:'主要原因 '+(i+1)+'：需要足夠層級間距與文字寬度',children:Array.from({length:3},(_,j)=>({name:'次要原因 '+(i+1)+'-'+(j+1)+'：較長文字用來驗證 sibling gap'}))}))};
+const dp=T.plan(denseTree,{maxNodeWidth:300});
+assert(dp.levelGap>p.levelGap,'dense Why tree increases level gap');
+assert(dp.siblingGap>p.siblingGap,'dense Why tree increases sibling gap');
+assert(dp.maxNodeWidth>=370,'dense long Why labels widen nodes');
+
+console.log('PASS: P2 360 network, center safety, density rings, label collision avoidance and adaptive Why spacing.');

@@ -41,6 +41,14 @@ d={type:'concept',data:{nodes:Array.from({length:18},(_,i)=>({id:String(i),name:
 p=L.plan(d,base,3508);
 assert(p.height>=500&&p.height<=650,'concept network gets bounded research height');
 
+d={type:'why',data:{root:{name:'問題',children:Array.from({length:4},(_,i)=>({name:'原因 '+i,children:Array.from({length:3},(_,j)=>({name:'子原因 '+i+'-'+j}))}))}}};
+p=L.plan(d,base,3508);
+assert(p.height>=650&&p.height<=690,'dense Why tree receives extra vertical space');
+
+d={type:'concept',data:{nodes:Array.from({length:24},(_,i)=>({id:String(i),name:'密集概念 '+i})),links:[]}};
+p=L.plan(d,base,3508);
+assert(p.height>=680&&p.height<=700,'dense concept network receives extra vertical space');
+
 const stats=L.mermaidStats(many);
 assert(stats.tasks===14,'gantt task count parsed');
 assert(stats.sections===1,'gantt section count parsed');
