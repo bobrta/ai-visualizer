@@ -31,6 +31,8 @@ jobs:
             gate-config.js
             extensions/editor-state.js
             extensions/diagram-engine.js
+            extensions/diagram-network-p1.js
+            extensions/diagram-tree-p1.js
             extensions/template-library.js
             extensions/sidebar-workflow.js
             extensions/work-mode.js
