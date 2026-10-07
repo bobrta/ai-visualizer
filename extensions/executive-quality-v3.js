@@ -59,7 +59,7 @@ function postfit(d,r,p){
  }
  const legendCount=(r.traces||[]).filter(t=>t.showlegend!==false&&t.name).length;
  if(legendCount>6){
-   layout.legend={...(layout.legend||{}),font:{...(layout.legend?.font||{}),size:legendCount>10?8:9}};
+   layout.legend={...(layout.legend||{}),font:{...(layout.legend?.font||{}),size:10},itemwidth:Math.min(Number(layout.legend?.itemwidth)||40,30)};
    if(p.final==='top_kpi'){layout.legend={...layout.legend,orientation:'v',x:1.02,xanchor:'left',y:1,yanchor:'top'};layout.margin={...(layout.margin||{}),r:Math.max(layout.margin?.r||0,legendCount>10?190:165)};}
    else{layout.legend={...layout.legend,orientation:'h',x:0,y:-.19};layout.margin={...(layout.margin||{}),b:Math.max(layout.margin?.b||0,132)};}
    q.fixes.push({code:'legend-fit',label:'高密度圖例自動調整字級與位置'});
