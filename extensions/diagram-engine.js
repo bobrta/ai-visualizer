@@ -27,7 +27,7 @@ function textBox(text,{fontSize=14,maxWidth=240,minWidth=92,padX=18,padY=12,maxL
 }
 function normalizeIR(ir){
  if(!ir||!Array.isArray(ir.nodes)||!Array.isArray(ir.edges))throw Error('Diagram IR 需要 nodes 與 edges。');
- const seen=new Set(),nodes=ir.nodes.map((n,i)=>{const id=String(n.id??'').trim();if(!id||seen.has(id))throw Error('Diagram node id 必須唯一且非空。');seen.add(id);return {id,label:String(n.label??n.name??id),shape:n.shape||'rounded',group:n.group??null,level:Number.isFinite(n.level)?n.level:0,x:Number.isFinite(n.x)?n.x:0,y:Number.isFinite(n.y)?n.y:0,width:Number.isFinite(n.width)?n.width:0,height:Number.isFinite(n.height)?n.height:0,style:n.style||{},data:n.data||null,index:i};});
+ const seen=new Set(),nodes=ir.nodes.map((n,i)=>{const id=String(n.id??'').trim();if(!id||seen.has(id))throw Error('Diagram node id 必須唯一且非空。');seen.add(id);return {id,label:String(n.label??n.name??id),shape:n.shape||'rounded',group:n.group??null,level:Number.isFinite(n.level)?n.level:0,x:Number.isFinite(n.x)?n.x:0,y:Number.isFinite(n.y)?n.y:0,width:Number.isFinite(n.width)?n.width:0,height:Number.isFinite(n.height)?n.height:0,text:n.text||null,style:n.style||{},data:n.data||null,index:i};});
  const edges=ir.edges.map((e,i)=>{const source=String(e.source??''),target=String(e.target??'');if(!seen.has(source)||!seen.has(target))throw Error('Diagram edge 必須連到既有節點。');return {id:String(e.id||('e'+i)),source,target,label:String(e.label??e.relation??''),kind:e.kind||'relation',directed:e.directed!==false,routeStyle:e.routeStyle||'curved',style:e.style||{}};});
  return {nodes,edges,meta:{layout:'free',direction:'LR',padding:32,levelGap:96,siblingGap:24,...(ir.meta||{})}};
 }
