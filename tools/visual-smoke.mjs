@@ -148,7 +148,7 @@ try{
     status:document.querySelector('#status')?.textContent||'',
     mode:document.querySelector('#executiveSummaryMode')?.value,
     disabled:document.querySelector('#executiveSummaryMode')?.disabled,
-    kpiCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect'&&Number(s.y0)>1).length,
+    kpiCards:(document.querySelector('#plot')?.layout?.shapes||[]).filter(s=>s.type==='rect').length,
     paperHeadings:(document.querySelector('#plot')?.layout?.annotations||[]).filter(a=>a.xref==='paper'&&Number(a.y)>1.2).length,
     sourceEngine:Boolean(window.VCExecutiveSummary)
   }));
