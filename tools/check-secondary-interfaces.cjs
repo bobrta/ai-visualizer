@@ -11,8 +11,10 @@ const appearance=read('extensions/appearance.js');
 
 assert(!researchHtml.includes('id="theme"'),'Research Studio must not keep the legacy theme selector');
 assert(researchHtml.includes('id="appearance"'),'Research Studio uses shared appearance panel');
+assert(researchHtml.includes('../diagram-engine.js?v=1'),'Research Studio loads Diagram Engine v1');
 assert(!researchJs.includes("el('theme')"),'Research Studio JS must not depend on legacy theme control');
 assert(researchJs.includes('previewSize(width,height)'),'Research Studio must decouple preview and export size');
+assert(researchJs.includes("['why','argument'].includes(d.type)"),'Why and argument diagrams use Diagram Engine v1');
 for(const [name,src] of [['studio',researchJs],['thinking',researchThinking],['adapters',researchAdapters]]){
   assert(!src.includes('Arial, Noto Sans TC'),name+' must not hardcode the old font stack');
 }
