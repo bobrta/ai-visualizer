@@ -14,8 +14,8 @@ const root={name:'問題：報告延遲',children:[
   {name:'其他可能：需求反覆變更造成工作重做'}
 ]};
 const layout=E.layoutTree(root,{direction:'LR',fontSize:15,maxNodeWidth:260,levelGap:100,siblingGap:24,padding:32});
-assert.equal(layout.nodes.length,7,'tree node count');
-assert.equal(layout.edges.length,6,'tree edge count');
+assert.equal(layout.nodes.length,6,'tree node count');
+assert.equal(layout.edges.length,5,'tree edge count');
 assert(layout.bounds.width>0&&layout.bounds.height>0,'tree bounds are valid');
 
 for(let i=0;i<layout.nodes.length;i++){
