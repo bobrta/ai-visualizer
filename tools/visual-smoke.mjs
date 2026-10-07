@@ -29,6 +29,7 @@ async function screenshot(locator,file){
 async function mainChart(page,type,file){
   await page.selectOption('#chartType',type);
   await page.click('#sample');
+  await page.click('#generate');
   await page.waitForTimeout(1200);
   const diagnostic=await page.evaluate(()=>({
     type:document.querySelector('#chartType')?.value,
