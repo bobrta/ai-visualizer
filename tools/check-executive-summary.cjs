@@ -19,9 +19,10 @@ assert(c.executiveSummary.kpis.some(x=>x.label==='差距'&&x.value==='90'),'rang
 assert.equal(c.executiveSummary.source,'ERP 月報','source carried into composition');
 assert(c.executiveSummary.headline.includes('最高'),'auto insight becomes conclusion headline');
 assert.equal(c.layout.title.text,'','native chart title is suppressed in executive page');
-assert(c.layout.margin.t>=235&&c.layout.margin.b>=92,'composition reserves header/footer space');
+assert.equal(c.executiveSummary.layout,'left_kpi','business bar uses left-KPI layout by Auto');
+assert(c.layout.margin.t>=170&&c.layout.margin.b>=92,'left-KPI composition reserves header/footer space');
 assert((c.layout.annotations||[]).some(a=>a.xref==='paper'&&Number(a.y)>1.2),'headline annotation is in paper space');
-assert((c.layout.shapes||[]).filter(s=>s.type==='rect'&&s.y0>1).length===3,'three KPI card shapes are composed');
+assert((c.layout.shapes||[]).filter(s=>s.type==='rect'&&s.x1<=.26).length===3,'three KPI cards are composed in the left rail');
 assert((c.layout.annotations||[]).some(a=>String(a.text).includes('資料來源：ERP 月報')),'source footer included');
 
 // Explicit headline overrides auto insight.
