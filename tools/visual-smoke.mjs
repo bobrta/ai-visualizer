@@ -29,8 +29,24 @@ async function screenshot(locator,file){
 async function mainChart(page,type,file){
   await page.selectOption('#chartType',type);
   await page.click('#sample');
-  await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:20000});
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(1200);
+  const diagnostic=await page.evaluate(()=>({
+    type:document.querySelector('#chartType')?.value,
+    status:document.querySelector('#status')?.textContent,
+    plotDisplay:getComputedStyle(document.querySelector('#plot')).display,
+    plotHTML:(document.querySelector('#plot')?.innerHTML||'').length,
+    hasPlotly:Boolean(window.Plotly),
+    hasNewPlot:Boolean(window.Plotly?.newPlot),
+    plotlyVersion:window.Plotly?.version||'',
+    chartDataType:window.chartData?.type||null,
+    inputType:(()=>{try{return JSON.parse(document.querySelector('#input')?.value||'{}').type||null}catch{return 'invalid-json'}})(),
+    chartConfigType:typeof window.chartConfig,
+    loadPlotlyType:typeof window.loadPlotly
+  }));
+  console.log('VISUAL-DIAG',type,JSON.stringify(diagnostic));
+  try{await page.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});}
+  catch(e){await page.screenshot({path:path.join(OUT,`debug-main-${type}.png`),fullPage:true,animations:'disabled'});throw new Error(`${type}: Plotly container did not appear. ${JSON.stringify(diagnostic)}`);}
+  await page.waitForTimeout(500);
   const status=await page.locator('#status').textContent();
   assert(!status?.includes('無法產生'),`${type}: render failed: ${status}`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
