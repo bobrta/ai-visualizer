@@ -34,6 +34,7 @@ chartConfig=function(d){
    radialaxis:{...(r.layout.polar?.radialaxis||{}),gridcolor:s.grid,linecolor:s.grid,tickfont:{...(r.layout.polar?.radialaxis?.tickfont||{}),family:s.fontFamily,color:s.muted}},
    angularaxis:{...(r.layout.polar?.angularaxis||{}),gridcolor:s.grid,linecolor:s.grid,tickfont:{...(r.layout.polar?.angularaxis?.tickfont||{}),family:s.fontFamily,color:s.muted}}
  };
+ // Standard analytical charts intentionally stay on the 6-color theme palette; the 40-color library is for controlled overrides and grouped diagrams.
  r.traces.forEach((t,i)=>{
    const color=palette[i%palette.length];
    if(t.type==='mesh3d')t.color=color;
