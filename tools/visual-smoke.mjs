@@ -91,19 +91,37 @@ async function researchDiagram(context,id,engine,file){
   const m=await page.evaluate(()=>{
     const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),sr=svg?.getBoundingClientRect();
     const texts=svg?[...svg.querySelectorAll('text')].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};}):[];
+    const rects=sel=>svg?[...svg.querySelectorAll(sel)].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,w:r.width,h:r.height};}):[];
     return {
       engine:svg?.dataset.engine||'',
+      layoutVersion:svg?.dataset.layoutVersion||'',
+      treeLevelGap:Number(svg?.dataset.treeLevelGap||0),
+      treeSiblingGap:Number(svg?.dataset.treeSiblingGap||0),
+      networkP1:Boolean(window.VCResearchNetworkP1),
+      treeP1:Boolean(window.VCResearchTreeP1),
       layoutEngine:Boolean(window.VCResearchLayout),
       stage:stage&&{w:stage.clientWidth,h:stage.clientHeight},
       svg:sr&&{left:sr.left,top:sr.top,right:sr.right,bottom:sr.bottom,w:sr.width,h:sr.height},
       bad:svg?/NaN|Infinity|undefined/.test(svg.outerHTML):true,
-      texts
+      texts,
+      nodes:rects('[data-node="1"]'),
+      edgeLabels:rects('[data-edge-label-box="1"]')
     };
   });
   assert(m.engine===engine,`${id}: expected ${engine}, got ${m.engine||'none'}`);
   assert(m.layoutEngine,`${id}: Research Figure Layout engine missing`);
-  if(id==='why')assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
-  if(id==='concept')assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
+  if(id==='why'){
+    assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
+    assert(m.treeP1&&m.layoutVersion==='p1',`${id}: Why P1 layout override missing`);
+    assert(m.treeLevelGap>=120&&m.treeSiblingGap>=30,`${id}: adaptive tree gaps missing ${m.treeLevelGap}/${m.treeSiblingGap}`);
+  }
+  if(id==='concept'){
+    assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
+    assert(m.networkP1&&m.layoutVersion==='p1',`${id}: Concept P1 layout override missing`);
+    const overlaps=(arr,gap=1)=>{let n=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){const a=arr[i],b=arr[j];if(a.left<b.right-gap&&a.right>b.left+gap&&a.top<b.bottom-gap&&a.bottom>b.top+gap)n++;}return n;};
+    assert(overlaps(m.nodes,2)===0,`${id}: rendered nodes overlap`);
+    assert(overlaps(m.edgeLabels,1)===0,`${id}: rendered relation labels overlap`);
+  }
   assert(m.stage?.w>300&&m.stage?.h>200,`${id}: invalid preview size`);
   assert(m.svg?.w>300&&m.svg?.h>200,`${id}: missing/undersized SVG`);
   assert(!m.bad,`${id}: SVG contains invalid numeric output`);

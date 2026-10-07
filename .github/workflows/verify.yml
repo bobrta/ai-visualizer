@@ -31,6 +31,8 @@ jobs:
             gate-config.js
             extensions/editor-state.js
             extensions/diagram-engine.js
+            extensions/diagram-network-p1.js
+            extensions/diagram-tree-p1.js
             extensions/template-library.js
             extensions/sidebar-workflow.js
             extensions/work-mode.js
@@ -110,6 +112,8 @@ jobs:
         run: node tools/check-diagram-engine.cjs
       - name: Check Research Figure Layout
         run: node tools/check-research-layout.cjs
+      - name: Check Research Relations P1
+        run: node tools/check-research-relations-p1.cjs
 
       - name: Verify referenced local assets
         shell: bash
