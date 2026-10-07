@@ -13,7 +13,10 @@ const fontPresets={
  jhenghei:{name:'微軟正黑體',body:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif',title:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif'},
  song:{name:'宋體（明體）',body:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif',title:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif'}
 };
+const STORE='visual-canvas-style-v1';
 let theme='executive',color=themes.executive.color,background=themes.executive.background,custom=false,font='modern';
+try{const saved=JSON.parse(localStorage.getItem(STORE)||'null');if(saved){if(themes[saved.theme])theme=saved.theme;if(fontPresets[saved.font])font=saved.font;if(['white','black'].includes(saved.background))background=saved.background;if(colors.some(c=>c[1]===saved.color))color=saved.color;custom=Boolean(saved.custom);}}catch{}
+function persist(){try{localStorage.setItem(STORE,JSON.stringify({theme,font,color,background,custom}));}catch{}}
 function state(){
  const base=themes[theme]||themes.executive,dark=background==='black';
  if(dark)return {theme,font,color,background,bg:'#0B0F14',fg:'#F3F6F8',muted:'#B7C0C8',grid:'#2B343D',surface:'#111820',accent:visible(color),positive:'#76B982',negative:'#E07B72',warning:'#D8B45C',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
@@ -27,6 +30,7 @@ function set(next){
  if(next.color&&colors.some(c=>c[1]===next.color)){color=next.color;custom=true;}
  if(['white','black'].includes(next.background))background=next.background;
  if(next.font&&fontPresets[next.font])font=next.font;
+ persist();
 }
 function mount(host,onchange){
  host.classList.add('appearance-panel');
