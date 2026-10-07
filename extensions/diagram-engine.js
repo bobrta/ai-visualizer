@@ -198,6 +198,6 @@ function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,
  for(const n of layout.nodes){const strong=n.level===0,color=strong?(accent||style.accent):style.grid,fill=strong?(accent||style.accent):style.surface,ink=strong?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:strong?14:11,fill,stroke:color,'stroke-width':strong?0:1.4}));const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width});const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':strong?style.titleFamily:style.fontFamily,'font-size':strong?16:14,'font-weight':strong?700:500,fill:ink});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);}
  svg.dataset.engine='vc-diagram-v1';return svg;
 }
-const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,routeNetworkEdge,placeEdgeLabel,fitBounds,renderTreeSVG,renderNetworkSVG};
+const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,fitBounds,renderTreeSVG,renderNetworkSVG};
 if(typeof window!=='undefined')window.VCDiagramEngine=API;if(typeof module!=='undefined'&&module.exports)module.exports=API;
 })();
