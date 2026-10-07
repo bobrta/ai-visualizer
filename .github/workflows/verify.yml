@@ -40,6 +40,7 @@ jobs:
             extensions/pdf-export.js
             extensions/appearance.js
             extensions/professional.js
+            extensions/chart-guardrails.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
@@ -73,6 +74,8 @@ jobs:
         run: node tools/check-typography.cjs
       - name: Check presentation design system
         run: node tools/check-design-system.cjs
+      - name: Check chart guardrails
+        run: node tools/check-guardrails.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1

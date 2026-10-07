@@ -50,6 +50,9 @@ async function mainChart(page,type,file){
   await page.waitForTimeout(500);
   const status=await page.locator('#status').textContent();
   assert(!status?.includes('無法產生'),`${type}: render failed: ${status}`);
+  const guard=await page.evaluate(()=>({hidden:document.querySelector('#guardrailPanel')?.hidden,score:Number(document.querySelector('#guardrailPanel')?.dataset.score),blocking:document.querySelector('#guardrailPanel')?.dataset.blocking}));
+  assert(guard.hidden===false&&Number.isFinite(guard.score),`${type}: guardrail panel missing`);
+  assert(guard.blocking==='false',`${type}: sample unexpectedly blocked by guardrails`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
