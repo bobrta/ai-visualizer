@@ -53,6 +53,9 @@ async function mainChart(page,type,file){
   const guard=await page.evaluate(()=>({hidden:document.querySelector('#guardrailPanel')?.hidden,score:Number(document.querySelector('#guardrailPanel')?.dataset.score),blocking:document.querySelector('#guardrailPanel')?.dataset.blocking}));
   assert(guard.hidden===false&&Number.isFinite(guard.score),`${type}: guardrail panel missing`);
   assert(guard.blocking==='false',`${type}: sample unexpectedly blocked by guardrails`);
+  const smart=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent||'',hasEngine:Boolean(window.VCSmartLayout)}));
+  assert(smart.hasEngine,`${type}: Smart Layout engine missing`);
+  assert(smart.status.includes('自動調整'),`${type}: Smart Layout did not report adjustments`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
