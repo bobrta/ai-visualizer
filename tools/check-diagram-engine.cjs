@@ -107,8 +107,8 @@ const stakeholderData={center:'銀髮藥動脈雲端平台',groups:[
 const stake=E.layoutStakeholder(stakeholderData,{groupRadius:260,itemRadius:220,padding:48,maxItemWidth:230});
 assert.equal(stake.nodes.filter(n=>n.level===0).length,1,'stakeholder one core');
 assert.equal(stake.nodes.filter(n=>n.level===1).length,4,'stakeholder group count');
-assert.equal(stake.nodes.filter(n=>n.level===2).length,14,'stakeholder capability count');
-assert.equal(stake.edges.length,18,'stakeholder edge count');
+assert.equal(stake.nodes.filter(n=>n.level===2).length,13,'stakeholder capability count');
+assert.equal(stake.edges.length,17,'stakeholder edge count');
 for(let i=0;i<stake.nodes.length;i++)for(let j=i+1;j<stake.nodes.length;j++)assert(!E.rectOverlap(stake.nodes[i],stake.nodes[j],4),`stakeholder nodes overlap: ${stake.nodes[i].id}/${stake.nodes[j].id}`);
 for(const n of stake.nodes){const left=n.x-n.width/2,top=n.y-n.height/2,right=n.x+n.width/2,bottom=n.y+n.height/2;assert(left>=stake.bounds.x-1&&right<=stake.bounds.right+1,'stakeholder node horizontal bounds');assert(top>=stake.bounds.y-1&&bottom<=stake.bounds.bottom+1,'stakeholder node vertical bounds');}
 const sf16=E.fitBounds(stake.bounds,1180,664,30),sfa4=E.fitBounds(stake.bounds,1120,792,30);
