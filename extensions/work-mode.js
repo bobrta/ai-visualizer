@@ -36,6 +36,7 @@
     else context.innerHTML='<strong>完整工具箱</strong><span>不篩選用途，直接查看全部架構。</span><button type="button" id="modeAction">'+labels[mode].cta+'</button>';
     $('modeAction')?.addEventListener('click',()=>{$('templates')?.click();});
     window.VCTemplateLibrary?.setMode(mode);
+    window.dispatchEvent(new CustomEvent('vc-work-mode-change',{detail:{mode}}));
     if(openLibrary)$('templates')?.click();
   }
 
