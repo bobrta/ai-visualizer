@@ -98,4 +98,24 @@ assert(backRoute.labelAnchor==='end'||backRoute.labelAnchor==='start','loop labe
 const forwardRoute=E.routeFlowEdge(flowMap.get(forwardEdge.source),flowMap.get(forwardEdge.target),{direction:'TD',back:false,canvasBounds:flow.bounds});
 assert(!forwardRoute.back&&forwardRoute.d.split(' L ').length>=3,'forward edge uses orthogonal routing');
 
-console.log('PASS: Diagram Engine v1 tree + network + flow layout, collisions, bounds, ports, routing and labels.');
+const stakeholderData={center:'銀髮藥動脈雲端平台',groups:[
+{id:'admin',name:'Admin',relation:'治理',items:['法規遵循與資料安全監控','財務與帳務結算系統','客貨共載排程最佳化演算法','ESG 碳足跡減少追蹤儀表板']},
+{id:'elder',name:'長者與家屬',relation:'使用',items:['慢性病處方與領藥提醒','配送進度與到貨通知','家屬照護與異常提醒']},
+{id:'driver',name:'客運司機／配送員',relation:'執行',items:['客貨共載任務清單','定點交付與簽收確認','配送異常回報']},
+{id:'pharmacy',name:'在地藥師／醫療機構',relation:'供應',items:['處方與藥品準備','藥品交付核對','殘藥盤點與回收']}
+]};
+const stake=E.layoutStakeholder(stakeholderData,{groupRadius:260,itemRadius:220,padding:48,maxItemWidth:230});
+assert.equal(stake.nodes.filter(n=>n.level===0).length,1,'stakeholder one core');
+assert.equal(stake.nodes.filter(n=>n.level===1).length,4,'stakeholder group count');
+assert.equal(stake.nodes.filter(n=>n.level===2).length,13,'stakeholder capability count');
+assert.equal(stake.edges.length,17,'stakeholder edge count');
+for(let i=0;i<stake.nodes.length;i++)for(let j=i+1;j<stake.nodes.length;j++)assert(!E.rectOverlap(stake.nodes[i],stake.nodes[j],4),`stakeholder nodes overlap: ${stake.nodes[i].id}/${stake.nodes[j].id}`);
+for(const n of stake.nodes){const left=n.x-n.width/2,top=n.y-n.height/2,right=n.x+n.width/2,bottom=n.y+n.height/2;assert(left>=stake.bounds.x-1&&right<=stake.bounds.right+1,'stakeholder node horizontal bounds');assert(top>=stake.bounds.y-1&&bottom<=stake.bounds.bottom+1,'stakeholder node vertical bounds');}
+const sf16=E.fitBounds(stake.bounds,1180,664,30),sfa4=E.fitBounds(stake.bounds,1120,792,30);
+assert(sf16.scale>0&&sf16.scale<=1,'stakeholder 16:9 fit');
+assert(sfa4.scale>0&&sfa4.scale<=1,'stakeholder A4 fit');
+const stakeMap=new Map(stake.nodes.map(n=>[n.id,n]));
+for(const e of stake.edges){const r=E.routeStakeholderEdge(stakeMap.get(e.source),stakeMap.get(e.target));assert(r.d.includes(' Q '),'stakeholder curved route');}
+assert(/^#[0-9a-f]{6}$/i.test(E.mixHex('#1F4E79','#ffffff',.8)),'stakeholder color mix');
+
+console.log('PASS: Diagram Engine v1 tree + network + flow + stakeholder layouts, collisions, bounds, ports, routing and labels.');
