@@ -187,6 +187,118 @@ function renderNetworkSVG(data,width,height,style,{centerId=null,directed=true,m
  svg.dataset.engine='vc-diagram-network-v1';return svg;
 }
 
+
+function parseFlowchart(code){
+ const text=String(code||'').replace(/\r/g,''),lines=text.split('\n').map(x=>x.trim()).filter(Boolean);
+ if(!lines.length||!/^\s*(flowchart|graph)\b/i.test(lines[0]))throw Error('Flow Engine 需要 Mermaid flowchart / graph 語法。');
+ const direction=(lines[0].match(/\b(TD|TB|BT|LR|RL)\b/i)?.[1]||'TD').toUpperCase(),nodes=new Map(),edges=[];
+ function nodeSpec(token){
+   const raw=String(token||'').trim();
+   const m=raw.match(/^([A-Za-z0-9_.-]+)\s*(?:\(\[([\s\S]*?)\]\)|\[\[([\s\S]*?)\]\]|\[([\s\S]*?)\]|\{([\s\S]*?)\}|\(([\s\S]*?)\))?$/);
+   if(!m)return null;
+   const id=m[1],label=(m[2]??m[3]??m[4]??m[5]??m[6]??id).trim(),shape=m[5]!==undefined?'diamond':m[2]!==undefined?'terminator':m[3]!==undefined?'subprocess':m[6]!==undefined?'rounded':'rect';
+   const existing=nodes.get(id);if(!existing||existing.label===id)nodes.set(id,{id,label,shape});return id;
+ }
+ const edgeRe=/^(.+?)\s*--+>|^(.+?)\s*-\.->/;
+ for(let i=1;i<lines.length;i++){
+   const line=lines[i];if(/^%%/.test(line))continue;
+   let srcPart='',rest='',dashed=false;
+   const arrow=line.match(/^(.*?)\s*(-\.->|--+>)\s*(.*)$/);
+   if(!arrow)continue;
+   srcPart=arrow[1].trim();dashed=arrow[2].includes('.');rest=arrow[3].trim();
+   const source=nodeSpec(srcPart);if(!source)continue;
+   let label='',targetPart=rest;
+   const lm=rest.match(/^\|([^|]{0,80})\|\s*(.+)$/);if(lm){label=lm[1].trim();targetPart=lm[2].trim();}
+   const target=nodeSpec(targetPart);if(!target)continue;
+   edges.push({id:'f'+edges.length,source,target,label,directed:true,kind:'flow',routeStyle:'orthogonal',style:{dashed}});
+ }
+ if(!nodes.size)throw Error('流程圖沒有可解析的節點。');
+ if(!edges.length)throw Error('流程圖沒有可解析的連線。');
+ return {direction,nodes:[...nodes.values()],edges};
+}
+function flowToIR(input,{fontSize=15,maxNodeWidth=260}={}){
+ const parsed=typeof input==='string'?parseFlowchart(input):input;
+ const nodes=(parsed.nodes||[]).map((n,i)=>{const max=n.shape==='diamond'?210:maxNodeWidth,box=textBox(n.label,{fontSize,maxWidth:max,minWidth:n.shape==='diamond'?130:120,padX:20,padY:13,maxLines:4});const side=n.shape==='diamond'?Math.max(120,Math.min(210,Math.max(box.width,box.height*1.35))):null;return {id:String(n.id),label:String(n.label||n.id),shape:n.shape||'rect',width:side||box.width,height:side||box.height,text:box,index:i,style:n.style||{}};});
+ const edges=(parsed.edges||[]).map((e,i)=>({id:String(e.id||('f'+i)),source:String(e.source),target:String(e.target),label:String(e.label||''),directed:e.directed!==false,kind:'flow',routeStyle:'orthogonal',style:e.style||{}}));
+ return normalizeIR({nodes,edges,meta:{layout:'flow',direction:parsed.direction||'TD'}});
+}
+function flowRanks(ir){
+ const indeg=new Map(ir.nodes.map(n=>[n.id,0])),out=new Map(ir.nodes.map(n=>[n.id,[]]));
+ for(const e of ir.edges){indeg.set(e.target,(indeg.get(e.target)||0)+1);out.get(e.source).push(e.target);}
+ let roots=ir.nodes.filter(n=>(indeg.get(n.id)||0)===0).map(n=>n.id);if(!roots.length)roots=[ir.nodes[0].id];
+ const rank=new Map(),q=roots.map(id=>(rank.set(id,0),id));
+ while(q.length){const id=q.shift(),r=rank.get(id);for(const to of out.get(id)||[])if(!rank.has(to)){rank.set(to,r+1);q.push(to);}}
+ // attach unreachable/cyclic nodes by local propagation
+ for(let pass=0;pass<ir.nodes.length;pass++)for(const e of ir.edges){if(rank.has(e.source)&&!rank.has(e.target))rank.set(e.target,rank.get(e.source)+1);}
+ let max=Math.max(0,...rank.values());for(const n of ir.nodes)if(!rank.has(n.id))rank.set(n.id,++max);
+ return rank;
+}
+function layoutFlow(input,{rankGap=120,siblingGap=44,padding=52,maxNodeWidth=260}={}){
+ const ir=flowToIR(input,{maxNodeWidth}),rank=flowRanks(ir),direction=ir.meta.direction||'TD',vertical=direction==='TD'||direction==='TB'||direction==='BT';
+ const groups=new Map();for(const n of ir.nodes){n.level=rank.get(n.id)||0;(groups.get(n.level)||groups.set(n.level,[]).get(n.level)).push(n);}
+ const ranks=[...groups.keys()].sort((a,b)=>a-b),rankSizes=new Map();
+ for(const r of ranks){const arr=groups.get(r),cross=arr.reduce((sum,n,i)=>sum+(vertical?n.width:n.height)+(i?siblingGap:0),0),main=Math.max(...arr.map(n=>vertical?n.height:n.width));rankSizes.set(r,{cross,main});}
+ let cursor=padding;
+ for(const r of ranks){
+   const arr=groups.get(r),rs=rankSizes.get(r);let cross=-rs.cross/2;
+   for(const n of arr){const crossSize=vertical?n.width:n.height;if(vertical){n.x=cross+crossSize/2;n.y=cursor+rs.main/2;}else{n.x=cursor+rs.main/2;n.y=cross+crossSize/2;}cross+=crossSize+siblingGap;}
+   cursor+=rs.main+rankGap;
+ }
+ // center each rank and separate nodes
+ let nodes=avoidCollisions(ir.nodes,{gap:18,iterations:80,axis:'both'});
+ let b=bounds(nodes,padding),sx=padding-b.x,sy=padding-b.y;nodes=nodes.map(n=>({...n,x:n.x+sx,y:n.y+sy}));b=bounds(nodes,padding);
+ if(direction==='BT')nodes=nodes.map(n=>({...n,y:b.height-n.y}));
+ if(direction==='RL')nodes=nodes.map(n=>({...n,x:b.width-n.x}));
+ const map=new Map(nodes.map(n=>[n.id,n])),edgeMeta=new Map();
+ for(const e of ir.edges){const s=map.get(e.source),t=map.get(e.target),back=(t.level??0)<=(s.level??0);edgeMeta.set(e.id,{back});}
+ return {...ir,nodes,meta:{...ir.meta,rankGap,siblingGap,padding},edgeMeta,bounds:bounds(nodes,padding)};
+}
+function flowPort(node,side){
+ if(node.shape==='diamond'){const half=node.width/2;return side==='top'?{x:node.x,y:node.y-half}:side==='bottom'?{x:node.x,y:node.y+half}:side==='left'?{x:node.x-half,y:node.y}:{x:node.x+half,y:node.y};}
+ return anchor(node,side);
+}
+function routeFlowEdge(source,target,{direction='TD',back=false,lane=0,canvasBounds=null}={}){
+ const vertical=direction==='TD'||direction==='TB'||direction==='BT';
+ if(!back){
+   const s=flowPort(source,vertical?(direction==='BT'?'top':'bottom'):(direction==='RL'?'left':'right'));
+   const t=flowPort(target,vertical?(direction==='BT'?'bottom':'top'):(direction==='RL'?'right':'left'));
+   if(vertical){const my=(s.y+t.y)/2;return {d:`M ${s.x} ${s.y} L ${s.x} ${my} L ${t.x} ${my} L ${t.x} ${t.y}`,s,t,labelPoint:{x:(s.x+t.x)/2,y:my-10},back:false};}
+   const mx=(s.x+t.x)/2;return {d:`M ${s.x} ${s.y} L ${mx} ${s.y} L ${mx} ${t.y} L ${t.x} ${t.y}`,s,t,labelPoint:{x:mx,y:(s.y+t.y)/2-10},back:false};
+ }
+ const b=canvasBounds||bounds([source,target],40);
+ if(vertical){
+   const side=(lane%2===0?'left':'right'),x=side==='left'?b.x-34-lane*16:b.right+34+lane*16,s=flowPort(source,side),t=flowPort(target,side);
+   return {d:`M ${s.x} ${s.y} L ${x} ${s.y} L ${x} ${t.y} L ${t.x} ${t.y}`,s,t,labelPoint:{x:x+(side==='left'?-8:8),y:(s.y+t.y)/2},back:true,labelAnchor:side==='left'?'end':'start'};
+ }
+ const side=(lane%2===0?'top':'bottom'),y=side==='top'?b.y-34-lane*16:b.bottom+34+lane*16,s=flowPort(source,side),t=flowPort(target,side);
+ return {d:`M ${s.x} ${s.y} L ${s.x} ${y} L ${t.x} ${y} L ${t.x} ${t.y}`,s,t,labelPoint:{x:(s.x+t.x)/2,y:y+(side==='top'?-8:8)},back:true,labelAnchor:'middle'};
+}
+function diamondPoints(n){const hw=n.width/2,hh=n.height/2;return `${n.x},${n.y-hh} ${n.x+hw},${n.y} ${n.x},${n.y+hh} ${n.x-hw},${n.y}`;}
+function renderFlowSVG(input,width,height,style,{maxNodeWidth=260}={}){
+ if(typeof document==='undefined')throw Error('renderFlowSVG 需要瀏覽器 DOM。');
+ const layout=layoutFlow(input,{maxNodeWidth,rankGap:118,siblingGap:48,padding:56}),NS='http://www.w3.org/2000/svg',make=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;};
+ const svg=make('svg',{xmlns:NS,width,height,viewBox:`0 0 ${width} ${height}`}),defs=make('defs'),marker=make('marker',{id:'vcFlowArrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});marker.append(make('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:style.accent}));defs.append(marker);svg.append(defs);svg.append(make('rect',{width,height,fill:style.bg}));
+ const f=fitBounds(layout.bounds,width,height,34),g=make('g',{transform:`translate(${f.tx} ${f.ty}) scale(${f.scale})`});svg.append(g);const byId=new Map(layout.nodes.map(n=>[n.id,n]));
+ let backLane=0;
+ for(const e of layout.edges){
+   const meta=layout.edgeMeta.get(e.id)||{},route=routeFlowEdge(byId.get(e.source),byId.get(e.target),{direction:layout.meta.direction,back:meta.back,lane:meta.back?backLane++:0,canvasBounds:layout.bounds});
+   g.append(make('path',{d:route.d,fill:'none',stroke:style.accent,'stroke-width':2.2,'stroke-linejoin':'round','stroke-linecap':'round','stroke-dasharray':e.style?.dashed?'6 5':'','marker-end':'url(#vcFlowArrow)'}));
+   if(e.label){
+     const m=wrapText(e.label,{fontSize:12,maxWidth:100,maxLines:2}),x=route.labelPoint.x,y=route.labelPoint.y;
+     g.append(make('rect',{x:x-m.width/2-6,y:y-m.height/2-4,width:m.width+12,height:m.height+8,rx:6,fill:style.bg,'fill-opacity':.96}));
+     const t=make('text',{x,y:y-m.height/2+m.lineHeight*.8,'text-anchor':route.labelAnchor||'middle','font-family':style.fontFamily,'font-size':12,'font-weight':650,fill:style.fg});m.lines.forEach((line,i)=>t.append(make('tspan',{x,dy:i?m.lineHeight:0},line)));g.append(t);
+   }
+ }
+ const palette=typeof VCStyle!=='undefined'?VCStyle.palette():[style.accent];
+ for(const n of layout.nodes){
+   const stroke=style.accent,fill=style.surface;
+   if(n.shape==='diamond')g.append(make('polygon',{points:diamondPoints(n),fill,stroke,'stroke-width':2}));
+   else g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:n.shape==='terminator'?n.height/2:n.shape==='rounded'?14:5,fill,stroke,'stroke-width':2}));
+   const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width}),t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':style.fontFamily,'font-size':15,'font-weight':600,fill:style.fg});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);
+ }
+ svg.dataset.engine='vc-diagram-flow-v1';return svg;
+}
+
 function fitBounds(b,width,height,padding=24){const usableW=Math.max(1,width-padding*2),usableH=Math.max(1,height-padding*2),scale=Math.min(1,usableW/Math.max(1,b.width),usableH/Math.max(1,b.height));return {scale,tx:padding+(usableW-b.width*scale)/2-b.x*scale,ty:padding+(usableH-b.height*scale)/2-b.y*scale};}
 function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,maxNodeWidth=290}={}){
  if(typeof document==='undefined')throw Error('renderTreeSVG 需要瀏覽器 DOM。');
@@ -198,6 +310,6 @@ function renderTreeSVG(root,width,height,style,{direction='LR',accent,edgeColor,
  for(const n of layout.nodes){const strong=n.level===0,color=strong?(accent||style.accent):style.grid,fill=strong?(accent||style.accent):style.surface,ink=strong?(typeof VCStyle!=='undefined'?VCStyle.inkOn(fill):'#fff'):style.fg;g.append(make('rect',{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height,rx:strong?14:11,fill,stroke:color,'stroke-width':strong?0:1.4}));const box=n.text||textBox(n.label,{fontSize:15,maxWidth:n.width});const t=make('text',{x:n.x,y:n.y-(box.lines.length-1)*box.lineHeight/2+5,'text-anchor':'middle','font-family':strong?style.titleFamily:style.fontFamily,'font-size':strong?16:14,'font-weight':strong?700:500,fill:ink});box.lines.forEach((line,i)=>t.append(make('tspan',{x:n.x,dy:i?box.lineHeight:0},line)));g.append(t);}
  svg.dataset.engine='vc-diagram-v1';return svg;
 }
-const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,fitBounds,renderTreeSVG,renderNetworkSVG};
+const API={charWidth,lineWidth,wrapText,textBox,normalizeIR,bounds,rectOverlap,avoidCollisions,treeToIR,layoutTree,routeEdge,networkToIR,degreeMap,bfsLevels,layoutNetwork,nodeContainsPoint,routeNetworkEdge,placeEdgeLabel,parseFlowchart,flowToIR,flowRanks,layoutFlow,flowPort,routeFlowEdge,diamondPoints,fitBounds,renderTreeSVG,renderNetworkSVG,renderFlowSVG};
 if(typeof window!=='undefined')window.VCDiagramEngine=API;if(typeof module!=='undefined'&&module.exports)module.exports=API;
 })();
