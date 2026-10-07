@@ -210,7 +210,12 @@ try{
     series:Array.from({length:9},(_,i)=>({name:'區域系列 '+(i+1),x:['Q1','Q2','Q3','Q4'],y:[10+i,18+i*2,15+i,22+i*2]}))
   };
   await main.selectOption('#chartType','grouped_bar');
-  await main.fill('#input',JSON.stringify(stressData,null,2));
+  await main.evaluate(data=>{
+    const input=document.querySelector('#input');
+    input.value=JSON.stringify(data,null,2);
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+  },stressData);
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(700);
