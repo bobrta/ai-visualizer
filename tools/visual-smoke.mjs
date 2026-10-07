@@ -57,6 +57,7 @@ async function mainChart(page,type,file){
   assert(smart.hasEngine,`${type}: Smart Layout engine missing`);
   assert(smart.status.includes('自動調整'),`${type}: Smart Layout did not report adjustments`);
   assert(await page.evaluate(()=>Boolean(window.VCAutoInsight)),`${type}: Auto Insight engine missing`);
+  assert(await page.evaluate(()=>Boolean(window.VCAccessibility)),`${type}: Accessibility engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -140,6 +141,22 @@ try{
   assert(insightUI.status.includes('洞察'),'bar: insight count missing from status');
   assert(insightUI.status.includes('標註配置'),'bar: annotation placement count missing from status');
   await screenshot(main.locator('#plot'),'main-bar-insight.png');
+  await main.evaluate(()=>VCStyle.set({theme:'mono'}));
+  await main.selectOption('#chartType','grouped_bar');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const a11yUI=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    patterns:(document.querySelector('#plot')?.data||[]).filter(t=>t.type==='bar').map(t=>t.marker?.pattern?.shape),
+    engine:Boolean(window.VCAccessibility)
+  }));
+  assert(a11yUI.engine,'mono: Accessibility engine missing');
+  assert(a11yUI.status.includes('可讀性'),'mono: accessibility adjustment count missing from status');
+  assert(a11yUI.patterns.filter(Boolean).length>=2,'mono: bar patterns missing');
+  await screenshot(main.locator('#plot'),'main-mono-accessibility.png');
+  await main.evaluate(()=>VCStyle.set({theme:'executive'}));
   mainCheck();
   await main.close();
 
