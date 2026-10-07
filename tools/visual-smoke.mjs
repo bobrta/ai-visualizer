@@ -16,6 +16,7 @@ async function attachDiagnostics(page,name){
   const errors=[];
   page.on('pageerror',e=>errors.push('pageerror: '+e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push('console.error: '+m.text());});
+  page.on('requestfailed',r=>errors.push('requestfailed: '+r.url()+' :: '+(r.failure()?.errorText||'')));
   return ()=>{if(errors.length)throw new Error(name+' browser errors:\n'+errors.join('\n'));};
 }
 async function assertNoBodyOverflow(page,label,slack=6){
@@ -77,7 +78,7 @@ async function researchDiagram(context,id,engine,file){
   await page.close();
 }
 
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,args:['--use-gl=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
   await context.route(/https:\/\/cdn\.plot\.ly\/plotly-[^/]+\.min\.js/,route=>route.fulfill({status:200,contentType:'application/javascript',body:LOCAL_PLOTLY}));
@@ -86,6 +87,8 @@ try{
   const main=await context.newPage(),mainCheck=await attachDiagnostics(main,'main');
   await main.goto(BASE+'/',{waitUntil:'domcontentloaded'});
   await main.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
+  await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
+  assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
   await assertNoBodyOverflow(main,'main',8);
   await mainChart(main,'scatter3d','main-scatter3d.png');
   await mainChart(main,'parallel','main-parallel.png');
