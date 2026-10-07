@@ -72,8 +72,25 @@ for(const e of net.edges){
  for(const n of net.nodes)assert(!E.nodeContainsPoint(n,{x:lp.x,y:lp.y},-2),'edge label center should avoid node body');
 }
 const a=netMap.get('concept'),b=netMap.get('network');
-const r1=E.routeNetworkEdge(a,b,{index:0,total:2}),r2=E.routeNetworkEdge(b,a,{index:1,total:2});
+const r1=E.routeNetworkEdge(a,b,{index:0,total:2,edgeIndex:0}),r2=E.routeNetworkEdge(b,a,{index:1,total:2,edgeIndex:1});
 assert(r1.d!==r2.d,'parallel/opposite routes are separated');
+const levelOne=net.nodes.filter(n=>n.level===1),quadrants=new Set(levelOne.map(n=>`${Math.sign(n.x-hub.x)}:${Math.sign(n.y-hub.y)}`));
+assert(quadrants.size>=4,'small first ring uses the full 360-degree circle');
+
+const denseNetwork={nodes:[{id:'concept',name:'中央核心概念：高密度研究架構'},...Array.from({length:20},(_,i)=>({id:'d'+i,name:'很長的概念節點 '+(i+1)+'：需要自動換行並保持安全距離'}))],links:Array.from({length:20},(_,i)=>({source:'concept',target:'d'+i,relation:'關係詞 '+(i+1)}))};
+const denseNet=E.layoutNetwork(denseNetwork,{centerId:'concept',ringGap:170,nodeGap:30,padding:42,maxNodeWidth:280});
+assert(denseNet.meta.ringRadii[1]>170,'dense first ring expands beyond the base ring gap');
+const denseHub=denseNet.nodes.find(n=>n.id==='concept');
+for(const n of denseNet.nodes.filter(n=>n.id!=='concept')){
+  const dist=Math.hypot(n.x-denseHub.x,n.y-denseHub.y);
+  assert(dist>=denseNet.meta.coreSafetyRadius-2,'dense nodes respect the center safety radius');
+}
+for(let i=0;i<denseNet.nodes.length;i++)for(let j=i+1;j<denseNet.nodes.length;j++)assert(!E.rectOverlap(denseNet.nodes[i],denseNet.nodes[j],6),`dense network nodes overlap: ${denseNet.nodes[i].id}/${denseNet.nodes[j].id}`);
+
+const sameRoute=E.routeNetworkEdge(denseHub,denseNet.nodes.find(n=>n.id==='d0'),{edgeIndex:0});
+const label1=E.placeEdgeLabel(sameRoute,'第一個很長的關係詞',denseNet.nodes,{fontSize:11,maxWidth:130,occupied:[]});
+const label2=E.placeEdgeLabel(sameRoute,'第二個很長的關係詞',denseNet.nodes,{fontSize:11,maxWidth:130,occupied:[label1.box]});
+assert(!E.rectOverlap(label1.box,label2.box,2),'edge labels avoid each other when candidate space exists');
 
 const flowCode='flowchart TD\n A[提出研究問題] --> B[蒐集資料]\n B --> C{資料足夠？}\n C -->|是| D[分析與解釋]\n C -->|否| B\n D --> E[撰寫報告]';
 const parsedFlow=E.parseFlowchart(flowCode);
