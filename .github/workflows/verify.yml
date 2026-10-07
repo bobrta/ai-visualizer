@@ -42,6 +42,7 @@ jobs:
             extensions/professional.js
             extensions/chart-guardrails.js
             extensions/smart-layout.js
+            extensions/auto-insight.js
             extensions/typography/report.js
             extensions/typography/scaling.js
             extensions/learning-charts/catalog.js
@@ -79,6 +80,8 @@ jobs:
         run: node tools/check-guardrails.cjs
       - name: Check Smart Layout
         run: node tools/check-smart-layout.cjs
+      - name: Check Auto Insight
+        run: node tools/check-auto-insight.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
       - name: Check Diagram Engine v1
