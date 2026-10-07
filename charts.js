@@ -36,7 +36,7 @@ if(['line','bar','grouped_bar','stacked_bar','area','stacked_area','scatter','bu
 }else if(t==='table'){
  array(d.headers,'headers');if(!Array.isArray(d.rows)||!d.rows.length||d.rows.some(r=>!Array.isArray(r)||r.length!==d.headers.length||r.some(v=>!['string','number'].includes(typeof v))))throw Error('rows 需為與 headers 欄數一致的二維資料。');traces.push({type:'table',header:{values:d.headers.map(safeText),fill:{color:'#6965db'},font:{color:'white'},height:34},cells:{values:d.headers.map((_,i)=>d.rows.map(r=>safeText(r[i]))),height:30,fill:{color:'#edf0fc'}}});
 }
-if(!traces.length)throw Error('沒有可繪製的資料。');if(d.x_title)layout.xaxis={...layout.xaxis,title:{text:safeText(d.x_title)}};if(d.y_title)layout.yaxis={title:{text:safeText(d.y_title)}};return {traces,layout};}
+if(!traces.length)throw Error('沒有可繪製的資料。');const is3d=['scatter3d','line3d','bar3d','surface'].includes(t);if(!is3d){if(d.x_title)layout.xaxis={...layout.xaxis,title:{text:safeText(d.x_title)}};if(d.y_title)layout.yaxis={...layout.yaxis,title:{text:safeText(d.y_title)}};}return {traces,layout};}
 function chartExample(type){const base={type,title:CHARTS.find(c=>c[0]===type)?.[1]+'｜示範資料'};
 const xy={x:['一月','二月','三月','四月'],y:[12,18,15,24]};
 if(type==='mindmap')return {type,title:'我的學習系統',branches:[{title:'課前',children:[{title:'閱讀講義'},{title:'整理問題'}]},{title:'課後',children:[{title:'練習'},{title:'複習'}]}]};
