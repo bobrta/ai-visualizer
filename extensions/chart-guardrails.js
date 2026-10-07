@@ -2,6 +2,7 @@
 (()=>{'use strict';
 const VERSION='1.0';
 const LABELS={business:'商業簡報',research:'研究專題',learning:'學習整理',all:'全功能'};
+const CHART_LABELS={bar:'長條圖',table:'資料表',treemap:'矩形樹圖',scatter:'散佈圖',heatmap:'熱力圖',histogram:'直方圖',line:'折線圖',parallel:'平行座標圖'};
 function mode(){try{const m=localStorage.getItem('visual-canvas-work-mode-v1')||'business';return LABELS[m]?m:'business';}catch{return 'business';}}
 function len(v){return Array.from(String(v??'')).length;}
 function uniq(a){return [...new Set(a)];}
@@ -101,7 +102,7 @@ function analyze(d,opt={}){
    const dims=Array.isArray(d.dimensions)?d.dimensions:[],n=dims.length,rows=Array.isArray(dims[0]?.values)?dims[0].values.length:0,constant=dims.filter(x=>variance(x.values)===0).length;
    if(n>16)add('block','parallel-overload','平行座標維度過多',`${n} 個維度會使圖面極度密集。`,'先做特徵選擇，保留核心變數。',['heatmap','table']);
    else if(n>8)add('warning','parallel-many-dimensions','平行座標維度偏多',`${n} 個維度會增加線條交叉與閱讀負荷。`,'商業簡報建議保留 4–7 個關鍵維度。');
-   if(n===2)add('warning','parallel-two-dimensions','只有兩個維度','平行座標的優勢尚未發揮，畫面也會顯得空。`','若目的是看兩變量關係，改用散佈圖。',['scatter']);
+   if(n===2)add('warning','parallel-two-dimensions','只有兩個維度','平行座標的優勢尚未發揮，畫面也會顯得空。','若目的是看兩變量關係，改用散佈圖。',['scatter']);
    if(rows>5000)add('block','parallel-too-many-rows','平行座標資料列過多',`${rows} 條線會形成實心色帶。`,'先抽樣、分群或改用熱力圖。',['heatmap']);
    else if(rows>500)add('warning','parallel-many-rows','平行座標線條偏多',`${rows} 條線容易互相遮蔽。`,'抽樣或只突出關鍵群組。');
    if(rows>0&&rows<4)add('warning','parallel-few-rows','資料列太少',`只有 ${rows} 筆資料，使用平行座標的必要性不高。`,'可改用表格或散佈圖。',['table','scatter']);
@@ -134,7 +135,7 @@ function render(host,report,opt={}){
  if(!report.issues.length){const ok=document.createElement('p');ok.className='guardrail-ok';ok.textContent='目前沒有偵測到明顯的資料密度或圖型適配問題。';host.append(ok);return;}
  const list=document.createElement('div');list.className='guardrail-list';
  for(const x of report.issues){const row=document.createElement('article');row.className='guardrail-item '+x.level;const mark=document.createElement('span');mark.className='guardrail-mark';mark.textContent=x.level==='block'?'!':'△';const body=document.createElement('div');const h=document.createElement('strong');h.textContent=x.title;const p=document.createElement('p');p.textContent=x.detail+(x.suggestion?' '+x.suggestion:'');body.append(h,p);row.append(mark,body);list.append(row);}host.append(list);
- if(report.alternatives.length&&opt.onAlternative){const alt=document.createElement('div');alt.className='guardrail-actions';const label=document.createElement('span');label.textContent='可考慮：';alt.append(label);for(const type of report.alternatives.slice(0,3)){const b=document.createElement('button');b.type='button';b.textContent=(window.CHARTS?.find?.(x=>x[0]===type)?.[1]||type);b.onclick=()=>opt.onAlternative(type);alt.append(b);}host.append(alt);}
+ if(report.alternatives.length&&opt.onAlternative){const alt=document.createElement('div');alt.className='guardrail-actions';const label=document.createElement('span');label.textContent='可考慮：';alt.append(label);for(const type of report.alternatives.slice(0,3)){const b=document.createElement('button');b.type='button';b.textContent=(CHART_LABELS[type]||type);b.onclick=()=>opt.onAlternative(type);alt.append(b);}host.append(alt);}
  if(report.blocking&&opt.onOverride){const row=document.createElement('div');row.className='guardrail-override';const p=document.createElement('span');p.textContent='這份資料已達阻擋門檻；你仍可強制產生一次。';const b=document.createElement('button');b.type='button';b.textContent='仍要產生一次';b.onclick=opt.onOverride;row.append(p,b);host.append(row);}
 }
 window.VCChartGuardrails={VERSION,analyze,render,verdict};
