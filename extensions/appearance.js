@@ -1,6 +1,15 @@
 /* Shared presentation design system. No document contents are persisted. */
 (()=>{'use strict';
-const colors=[['學術藍','#0072B2'],['鈷藍','#315DA8'],['靛藍','#5552A3'],['紫羅蘭','#8561A9'],['紫紅','#AA5388'],['玫瑰','#C45D7A'],['磚紅','#B34D48'],['朱紅','#D55E00'],['琥珀','#C58B20'],['金黃','#E0AF32'],['橄欖','#7C8F41'],['草綠','#5B9957'],['翠綠','#009E73'],['青綠','#238B8D'],['孔雀藍','#287C99'],['天藍','#56B4E9'],['灰藍','#647C95'],['深海藍','#24476A'],['可可','#8A6854'],['石板灰','#64748B']];
+const colorFamilies={
+ blue:[['深海藍','#24476A'],['高階海軍藍','#1F4E79'],['顧問藍','#2F5D8A'],['鈷藍','#315DA8'],['學術藍','#0072B2'],['孔雀藍','#287C99'],['灰藍','#647C95'],['天藍','#56B4E9']],
+ teal:[['深青綠','#176B69'],['青綠','#238B8D'],['翠綠','#009E73'],['海松綠','#3D7F70'],['灰翠綠','#587A72'],['草綠','#5B9957'],['橄欖','#7C8F41'],['鼠尾草','#86A08D']],
+ warm:[['酒紅','#8F3F4A'],['磚紅','#B34D48'],['朱紅','#D55E00'],['暖橘','#D79045'],['琥珀','#C58B20'],['金黃','#E0AF32'],['古銅','#9A7445'],['可可','#8A6854']],
+ purple:[['深靛紫','#4F4A78'],['靛藍','#5552A3'],['紫羅蘭','#8561A9'],['紫灰','#806293'],['梅紫','#8F5F86'],['紫紅','#AA5388'],['玫瑰','#C45D7A'],['藕粉','#B88791']],
+ neutral:[['炭黑','#2D3740'],['石墨','#3F4852'],['石板灰','#64748B'],['冷灰','#7D8790'],['中性灰','#8B929A'],['暖灰','#8A8178'],['灰褐','#8C7867'],['銀灰','#A3ABB2']]
+};
+const familyLabels={blue:'藍系',teal:'青綠系',warm:'暖色系',purple:'紫紅系',neutral:'中性色'};
+const colors=Object.values(colorFamilies).flat();
+const GROUP_BUSINESS=['#1F4E79','#176B69','#8B6F47','#806293','#B24A4A','#64748B','#315DA8','#7C8F41','#8F5F86','#287C99'];
 const themes={
  executive:{name:'Executive Navy｜高階主管',desc:'深海軍藍＋冷灰，適合策略、財務、決策簡報。',background:'white',color:'#1F4E79',palette:['#1F4E79','#4F81BD','#70AD47','#A5A5A5','#ED7D31','#8064A2'],fg:'#172B3A',muted:'#617181',grid:'#E8EDF2',surface:'#FFFFFF',accent:'#1F4E79',positive:'#2E7D32',negative:'#C64B3C',warning:'#D28A16'},
  consulting:{name:'Consulting Blue｜顧問簡報',desc:'清爽藍灰、資訊層級強，適合分析與提案。',background:'white',color:'#2F5D8A',palette:['#2F5D8A','#7FA6C9','#264653','#5C946E','#D79045','#9A6FB0'],fg:'#1D2A36',muted:'#697886',grid:'#E6EBF0',surface:'#FFFFFF',accent:'#2F5D8A',positive:'#3A7D44',negative:'#B24A4A',warning:'#C6892D'},
@@ -24,7 +33,10 @@ function state(){
  return {...base,theme,font,color:base.color,bg:base.surface,fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
 }
 function visible(hex){if(background!=='black')return hex;const v=hex.slice(1).match(/../g).map(x=>parseInt(x,16));if((.2126*v[0]+.7152*v[1]+.0722*v[2])<105)return '#'+v.map(n=>Math.round(n+(255-n)*.4).toString(16).padStart(2,'0')).join('');return hex;}
-function palette(){const base=themes[theme]||themes.executive;if(!custom)return base.palette.map(visible);const i=colors.findIndex(c=>c[1]===color),offsets=[0,7,12,4,15,10];return offsets.map(n=>visible(colors[(i+n+colors.length)%colors.length][1]));}
+function palette(){const base=themes[theme]||themes.executive;if(!custom)return base.palette.map(visible);const i=colors.findIndex(c=>c[1]===color),offsets=[0,9,18,27,34,14];return offsets.map(n=>visible(colors[(i+n+colors.length)%colors.length][1]));}
+function groupPalette(count=10){const n=Math.max(1,Math.min(10,Number(count)||10));if(theme==='mono')return Array.from({length:n},(_,i)=>visible(['#27313A','#3F4852','#59636D','#6E7780','#7D8790','#90979D','#A3ABB2','#B4BAC0','#C4C9CD','#D2D6DA'][i]));const base=GROUP_BUSINESS.map(visible),accent=visible(state().accent),idx=base.findIndex(x=>x.toLowerCase()===accent.toLowerCase());const ordered=idx>0?[...base.slice(idx),...base.slice(0,idx)]:base;return ordered.slice(0,n);}
+function mix(a,b,t=.5){const pa=String(a).replace('#','').match(/.{2}/g)?.map(x=>parseInt(x,16)),pb=String(b).replace('#','').match(/.{2}/g)?.map(x=>parseInt(x,16));if(!pa||!pb)return a;return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*Math.max(0,Math.min(1,t))).toString(16).padStart(2,'0')).join('');}
+function tone(hex,level='base'){const target=background==='black'?'#0B0F14':'#FFFFFF',amount={strong:0,base:.12,soft:.72,faint:.88}[level]??.12;return level==='strong'?visible(hex):mix(visible(hex),target,amount);}
 function set(next){
  if(next.theme&&themes[next.theme]){theme=next.theme;color=themes[theme].color;background=themes[theme].background;custom=false;}
  if(next.color&&colors.some(c=>c[1]===next.color)){color=next.color;custom=true;}
@@ -43,16 +55,17 @@ function mount(host,onchange){
  const fontSelect=document.createElement('select');fontSelect.className='font-select';fontSelect.setAttribute('aria-label','簡報字體');
  for(const [id,f] of Object.entries(fontPresets)){const o=document.createElement('option');o.value=id;o.textContent=f.name;fontSelect.append(o);}
  fontSelect.onchange=()=>{set({font:fontSelect.value});refresh();onchange?.();};host.append(fontSelect);
- const customTitle=document.createElement('span');customTitle.className='appearance-subtitle';customTitle.textContent='自訂主色';host.append(customTitle);
- const grid=document.createElement('div');grid.className='color-grid';const buttons=[];
- for(const [name,hex]of colors){const b=document.createElement('button');b.type='button';b.className='color-chip';b.style.backgroundColor=hex;b.title=name+' '+hex;b.setAttribute('aria-label',name+' '+hex);b.onclick=()=>{set({color:hex});refresh();onchange?.();};buttons.push([b,hex]);grid.append(b);}host.append(grid);
+ const paletteTitle=document.createElement('span');paletteTitle.className='appearance-subtitle';paletteTitle.textContent='目前主題色盤';host.append(paletteTitle);
+ const themeStrip=document.createElement('div');themeStrip.className='theme-palette-strip';host.append(themeStrip);
+ const advanced=document.createElement('details');advanced.className='advanced-colors';const summary=document.createElement('summary');summary.textContent='進階色庫 · 40 色';advanced.append(summary);const buttons=[];
+ for(const [family,list] of Object.entries(colorFamilies)){const section=document.createElement('div');section.className='color-family';const familyName=document.createElement('span');familyName.className='color-family-name';familyName.textContent=familyLabels[family];section.append(familyName);const grid=document.createElement('div');grid.className='color-grid';for(const [name,hex] of list){const b=document.createElement('button');b.type='button';b.className='color-chip';b.style.backgroundColor=hex;b.title=name+' '+hex;b.setAttribute('aria-label',name+' '+hex);b.onclick=()=>{set({color:hex});refresh();onchange?.();};buttons.push([b,hex]);grid.append(b);}section.append(grid);advanced.append(section);}host.append(advanced);
  const row=document.createElement('label');row.textContent='背景 ';const bgSelect=document.createElement('select');bgSelect.setAttribute('aria-label','圖表背景');
  for(const [value,name]of [['white','白色'],['black','深色']]){const o=document.createElement('option');o.value=value;o.textContent=name;bgSelect.append(o);}
  bgSelect.onchange=()=>{set({background:bgSelect.value});refresh();onchange?.();};row.append(bgSelect);host.append(row);
  const info=document.createElement('small');info.textContent='主題會統一標題、座標、格線、圖例與系列配色；自訂色仍可覆蓋主色。';host.append(info);
- function refresh(){select.value=theme;fontSelect.value=font;bgSelect.value=background;themeInfo.textContent=(themes[theme]||themes.executive).desc;buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
+ function refresh(){select.value=theme;fontSelect.value=font;bgSelect.value=background;themeInfo.textContent=(themes[theme]||themes.executive).desc;themeStrip.replaceChildren(...palette().map(hex=>{const sw=document.createElement('span');sw.className='theme-palette-chip';sw.style.backgroundColor=hex;sw.title=hex;return sw;}));buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
  refresh();return {refresh};
 }
 function inkOn(hex){const a=hex.slice(1).match(/../g).map(x=>parseInt(x,16));return (.2126*a[0]+.7152*a[1]+.0722*a[2])>145?'#111827':'#ffffff';}
-window.VCStyle={colors,themes,fontPresets,state,palette,set,mount,inkOn};
+window.VCStyle={colors,colorFamilies,familyLabels,themes,fontPresets,state,palette,groupPalette,tone,mix,set,mount,inkOn};
 })();
