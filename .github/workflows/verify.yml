@@ -28,6 +28,7 @@ jobs:
             gate.js
             gate-config.js
             extensions/editor-state.js
+            extensions/diagram-engine.js
             extensions/template-library.js
             extensions/sidebar-workflow.js
             extensions/work-mode.js
@@ -74,6 +75,8 @@ jobs:
         run: node tools/check-design-system.cjs
       - name: Check secondary interfaces
         run: node tools/check-secondary-interfaces.cjs
+      - name: Check Diagram Engine v1
+        run: node tools/check-diagram-engine.cjs
 
       - name: Verify referenced local assets
         shell: bash
