@@ -66,7 +66,7 @@ function apply(d,r){
 
  const bars=traces.filter(t=>t.type==='bar');
  if((mono||bars.length>3)&&bars.length){
-   bars.forEach((t,i)=>{t.marker={...(t.marker||{}),pattern:{...(t.marker?.pattern||{}),shape:PATTERN[i%PATTERN.length],solidity:.22},line:{...(t.marker?.line||{}),color:ensureContrast(s.fg,bg,3),width:.8}};});
+   bars.forEach((t,i)=>{const shape=mono?PATTERN[(i%(PATTERN.length-1))+1]:PATTERN[i%PATTERN.length];t.marker={...(t.marker||{}),pattern:{...(t.marker?.pattern||{}),shape,solidity:mono?.28:.22},line:{...(t.marker?.line||{}),color:ensureContrast(s.fg,bg,3),width:mono?1.1:.8}};});
    add('bar-patterns','長條系列加入紋理，避免只靠顏色');
  }
 
