@@ -79,7 +79,7 @@ async function researchDiagram(context,id,engine,file){
   await page.close();
 }
 
-const browser=await chromium.launch({headless:true,args:['--use-gl=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const browser=await chromium.launch({headless:false,args:['--use-gl=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
   await context.route(/https:\/\/cdn\.plot\.ly\/plotly-[^/]+\.min\.js/,route=>route.fulfill({status:200,contentType:'application/javascript',body:LOCAL_PLOTLY}));
@@ -91,8 +91,8 @@ try{
   await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
   assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
   await assertNoBodyOverflow(main,'main',8);
-  await mainChart(main,'scatter3d','main-scatter3d.png');
   await mainChart(main,'parallel','main-parallel.png');
+  await mainChart(main,'scatter3d','main-scatter3d.png');
   mainCheck();
   await main.close();
 
