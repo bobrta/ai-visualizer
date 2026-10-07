@@ -75,4 +75,27 @@ const a=netMap.get('concept'),b=netMap.get('network');
 const r1=E.routeNetworkEdge(a,b,{index:0,total:2}),r2=E.routeNetworkEdge(b,a,{index:1,total:2});
 assert(r1.d!==r2.d,'parallel/opposite routes are separated');
 
-console.log('PASS: Diagram Engine v1 tree + network layout, collision, bounds, routing and edge-label placement.');
+const flowCode='flowchart TD\n A[提出研究問題] --> B[蒐集資料]\n B --> C{資料足夠？}\n C -->|是| D[分析與解釋]\n C -->|否| B\n D --> E[撰寫報告]';
+const parsedFlow=E.parseFlowchart(flowCode);
+assert.equal(parsedFlow.direction,'TD','flow direction parsed');
+assert.equal(parsedFlow.nodes.length,5,'flow node count');
+assert.equal(parsedFlow.edges.length,5,'flow edge count');
+assert.equal(parsedFlow.nodes.find(n=>n.id==='C').shape,'diamond','decision node parsed as diamond');
+assert.equal(parsedFlow.edges.find(e=>e.source==='C'&&e.target==='B').label,'否','branch label parsed');
+
+const flow=E.layoutFlow(flowCode,{rankGap:120,siblingGap:44,padding:52,maxNodeWidth:250});
+assert(flow.bounds.width>0&&flow.bounds.height>0,'flow bounds valid');
+const flowMap=new Map(flow.nodes.map(n=>[n.id,n]));
+for(let i=0;i<flow.nodes.length;i++)for(let j=i+1;j<flow.nodes.length;j++)assert(!E.rectOverlap(flow.nodes[i],flow.nodes[j],6),`flow nodes overlap: ${flow.nodes[i].id}/${flow.nodes[j].id}`);
+const decision=flowMap.get('C');
+for(const side of ['top','bottom','left','right']){const p=E.flowPort(decision,side);assert(Number.isFinite(p.x)&&Number.isFinite(p.y),'diamond port '+side);}
+const backEdge=flow.edges.find(e=>e.source==='C'&&e.target==='B'),forwardEdge=flow.edges.find(e=>e.source==='C'&&e.target==='D');
+assert(flow.edgeMeta.get(backEdge.id).back===true,'loop edge detected as back edge');
+assert(flow.edgeMeta.get(forwardEdge.id).back===false,'forward branch remains forward');
+const backRoute=E.routeFlowEdge(flowMap.get(backEdge.source),flowMap.get(backEdge.target),{direction:'TD',back:true,lane:0,canvasBounds:flow.bounds});
+assert(backRoute.back&&backRoute.d.split(' L ').length>=3,'loop edge routes outside with orthogonal bends');
+assert(backRoute.labelAnchor==='end'||backRoute.labelAnchor==='start','loop label is anchored outside');
+const forwardRoute=E.routeFlowEdge(flowMap.get(forwardEdge.source),flowMap.get(forwardEdge.target),{direction:'TD',back:false,canvasBounds:flow.bounds});
+assert(!forwardRoute.back&&forwardRoute.d.split(' L ').length>=3,'forward edge uses orthogonal routing');
+
+console.log('PASS: Diagram Engine v1 tree + network + flow layout, collisions, bounds, ports, routing and labels.');
