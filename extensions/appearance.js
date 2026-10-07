@@ -8,14 +8,17 @@ const themes={
  premium:{name:'Premium Warm｜精品商務',desc:'墨黑、米金、暖灰，適合品牌、競賽封面與高質感提案。',background:'white',color:'#7A5B2E',palette:['#2D3740','#8B6F47','#B79B6C','#687078','#A76B5B','#587A72'],fg:'#272B2F',muted:'#74716C',grid:'#ECE8E2',surface:'#FFFFFF',accent:'#7A5B2E',positive:'#55745F',negative:'#A55D54',warning:'#B3833C'},
  mono:{name:'Monochrome｜黑白列印',desc:'灰階層級清楚，適合正式文件與列印。',background:'white',color:'#3F4852',palette:['#27313A','#59636D','#7D8790','#A3ABB2','#C4C9CD','#E1E4E7'],fg:'#20262C',muted:'#6E7780',grid:'#E5E7E9',surface:'#FFFFFF',accent:'#3F4852',positive:'#4E6354',negative:'#775454',warning:'#78684B'}
 };
-let theme='executive',color=themes.executive.color,background=themes.executive.background,custom=false;
-const FONT_STACK='-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif';
-const TITLE_STACK='-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif';
+const fontPresets={
+ modern:{name:'現代無襯線',body:'-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif',title:'-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif'},
+ jhenghei:{name:'微軟正黑體',body:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif',title:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif'},
+ song:{name:'宋體（明體）',body:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif',title:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif'}
+};
+let theme='executive',color=themes.executive.color,background=themes.executive.background,custom=false,font='modern';
 function state(){
  const base=themes[theme]||themes.executive,dark=background==='black';
- if(dark)return {theme,color,background,bg:'#0B0F14',fg:'#F3F6F8',muted:'#B7C0C8',grid:'#2B343D',surface:'#111820',accent:visible(color),positive:'#76B982',negative:'#E07B72',warning:'#D8B45C',fontFamily:FONT_STACK,titleFamily:TITLE_STACK};
- if(custom)return {theme:'custom',color,background,bg:'#FFFFFF',fg:'#1D2A36',muted:'#697886',grid:'#E6EBF0',surface:'#FFFFFF',accent:color,positive:'#3A7D44',negative:'#B24A4A',warning:'#C6892D',fontFamily:FONT_STACK,titleFamily:TITLE_STACK};
- return {...base,theme,color:base.color,bg:base.surface,fontFamily:FONT_STACK,titleFamily:TITLE_STACK};
+ if(dark)return {theme,color,background,bg:'#0B0F14',fg:'#F3F6F8',muted:'#B7C0C8',grid:'#2B343D',surface:'#111820',accent:visible(color),positive:'#76B982',negative:'#E07B72',warning:'#D8B45C',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
+ if(custom)return {theme:'custom',color,background,bg:'#FFFFFF',fg:'#1D2A36',muted:'#697886',grid:'#E6EBF0',surface:'#FFFFFF',accent:color,positive:'#3A7D44',negative:'#B24A4A',warning:'#C6892D',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
+ return {...base,theme,color:base.color,bg:base.surface,fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
 }
 function visible(hex){if(background!=='black')return hex;const v=hex.slice(1).match(/../g).map(x=>parseInt(x,16));if((.2126*v[0]+.7152*v[1]+.0722*v[2])<105)return '#'+v.map(n=>Math.round(n+(255-n)*.4).toString(16).padStart(2,'0')).join('');return hex;}
 function palette(){const base=themes[theme]||themes.executive;if(!custom)return base.palette.map(visible);const i=colors.findIndex(c=>c[1]===color),offsets=[0,7,12,4,15,10];return offsets.map(n=>visible(colors[(i+n+colors.length)%colors.length][1]));}
@@ -23,6 +26,7 @@ function set(next){
  if(next.theme&&themes[next.theme]){theme=next.theme;color=themes[theme].color;background=themes[theme].background;custom=false;}
  if(next.color&&colors.some(c=>c[1]===next.color)){color=next.color;custom=true;}
  if(['white','black'].includes(next.background))background=next.background;
+ if(next.font&&fontPresets[next.font])font=next.font;
 }
 function mount(host,onchange){
  host.classList.add('appearance-panel');
@@ -31,6 +35,10 @@ function mount(host,onchange){
  for(const [id,t] of Object.entries(themes)){const o=document.createElement('option');o.value=id;o.textContent=t.name;select.append(o);}
  select.onchange=()=>{set({theme:select.value});refresh();onchange?.();};host.append(select);
  const themeInfo=document.createElement('small');themeInfo.className='theme-info';host.append(themeInfo);
+ const fontTitle=document.createElement('span');fontTitle.className='appearance-subtitle';fontTitle.textContent='簡報字體';host.append(fontTitle);
+ const fontSelect=document.createElement('select');fontSelect.className='font-select';fontSelect.setAttribute('aria-label','簡報字體');
+ for(const [id,f] of Object.entries(fontPresets)){const o=document.createElement('option');o.value=id;o.textContent=f.name;fontSelect.append(o);}
+ fontSelect.onchange=()=>{set({font:fontSelect.value});refresh();onchange?.();};host.append(fontSelect);
  const customTitle=document.createElement('span');customTitle.className='appearance-subtitle';customTitle.textContent='自訂主色';host.append(customTitle);
  const grid=document.createElement('div');grid.className='color-grid';const buttons=[];
  for(const [name,hex]of colors){const b=document.createElement('button');b.type='button';b.className='color-chip';b.style.backgroundColor=hex;b.title=name+' '+hex;b.setAttribute('aria-label',name+' '+hex);b.onclick=()=>{set({color:hex});refresh();onchange?.();};buttons.push([b,hex]);grid.append(b);}host.append(grid);
@@ -38,9 +46,9 @@ function mount(host,onchange){
  for(const [value,name]of [['white','白色'],['black','深色']]){const o=document.createElement('option');o.value=value;o.textContent=name;bgSelect.append(o);}
  bgSelect.onchange=()=>{set({background:bgSelect.value});refresh();onchange?.();};row.append(bgSelect);host.append(row);
  const info=document.createElement('small');info.textContent='主題會統一標題、座標、格線、圖例與系列配色；自訂色仍可覆蓋主色。';host.append(info);
- function refresh(){select.value=theme;bgSelect.value=background;themeInfo.textContent=(themes[theme]||themes.executive).desc;buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
+ function refresh(){select.value=theme;fontSelect.value=font;bgSelect.value=background;themeInfo.textContent=(themes[theme]||themes.executive).desc;buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
  refresh();return {refresh};
 }
 function inkOn(hex){const a=hex.slice(1).match(/../g).map(x=>parseInt(x,16));return (.2126*a[0]+.7152*a[1]+.0722*a[2])>145?'#111827':'#ffffff';}
-window.VCStyle={colors,themes,state,palette,set,mount,inkOn};
+window.VCStyle={colors,themes,fontPresets,state,palette,set,mount,inkOn};
 })();

@@ -7,6 +7,9 @@ const themeIds=['executive','consulting','strategy','premium','mono'];
 function rgb(hex){return hex.slice(1).match(/../g).map(x=>parseInt(x,16));}
 function lum(hex){const a=rgb(hex).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*a[0]+.7152*a[1]+.0722*a[2];}
 function contrast(a,b){const x=lum(a),y=lum(b),hi=Math.max(x,y),lo=Math.min(x,y);return (hi+.05)/(lo+.05);}
+const fontIds=['modern','jhenghei','song'];
+for(const font of fontIds){ctx.VCStyle.set({font});const s=ctx.VCStyle.state();assert(s.fontFamily&&s.titleFamily,font+' font stacks exist');}
+ctx.VCStyle.set({font:'modern'});
 for(const id of themeIds){
   ctx.VCStyle.set({theme:id});
   const s=ctx.VCStyle.state(),p=ctx.VCStyle.palette();
@@ -18,7 +21,9 @@ for(const id of themeIds){
   assert(contrast(s.fg,s.bg)>=7,id+' body text contrast');
   assert(contrast(s.muted,s.bg)>=3,id+' muted text contrast');
 }
-ctx.VCStyle.set({theme:'executive'});
+ctx.VCStyle.set({theme:'executive',font:'jhenghei'});assert(ctx.VCStyle.state().fontFamily.includes('Microsoft JhengHei'));
+ctx.VCStyle.set({font:'song'});assert(ctx.VCStyle.state().fontFamily.includes('PMingLiU')||ctx.VCStyle.state().fontFamily.includes('MingLiU'));
+ctx.VCStyle.set({font:'modern'});
 ctx.doc=ctx.chartExample('bar');let c=ctx.chartConfig(ctx.doc);
 assert.equal(c.layout.title.font.size,28);assert.equal(c.layout.font.size,12);
 assert.equal(c.layout.xaxis.tickfont.size,11);assert.equal(c.layout.legend.orientation,'h');
