@@ -59,6 +59,7 @@ async function mainChart(page,type,file){
   assert(await page.evaluate(()=>Boolean(window.VCAutoInsight)),`${type}: Auto Insight engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCAccessibility)),`${type}: Accessibility engine missing`);
   assert(await page.evaluate(()=>Boolean(window.VCEmphasis)),`${type}: Emphasis engine missing`);
+  assert(await page.evaluate(()=>Boolean(window.VCLegendIntelligence)),`${type}: Legend Intelligence engine missing`);
   assert(await page.evaluate(()=>Array.isArray(document.querySelector('#plot')?.data)&&document.querySelector('#plot').data.length>0),`${type}: Plotly graph data missing`);
   const m=await page.evaluate(()=>{
     const plot=document.querySelector('#plot')?.getBoundingClientRect();
@@ -156,6 +157,23 @@ try{
   assert(emphasisUI.status.includes('主次層級'),'grouped_bar: hierarchy count missing from status');
   assert(new Set(emphasisUI.opacities).size>=2,'grouped_bar: series hierarchy not visible in Plotly data');
   await screenshot(main.locator('#plot'),'main-emphasis-grouped-bar.png');
+  await main.selectOption('#chartType','line');
+  await main.click('#sample');
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  await main.waitForTimeout(500);
+  const legendUI=await main.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent||'',
+    direct:(document.querySelector('#plot')?.data||[]).filter(t=>t.type==='scatter'&&Array.isArray(t.text)&&t.text.some(Boolean)).map(t=>({name:t.name,last:t.text.at(-1),mode:t.mode})),
+    marginRight:document.querySelector('#plot')?.layout?.margin?.r||0,
+    engine:Boolean(window.VCLegendIntelligence)
+  }));
+  assert(legendUI.engine,'line: Legend Intelligence engine missing');
+  assert(legendUI.status.includes('標籤策略'),'line: label strategy count missing from status');
+  assert(legendUI.direct.length>=1,'line: direct end label missing');
+  assert(legendUI.direct.every(x=>x.last===x.name),'line: direct end label mismatch');
+  assert(legendUI.marginRight>=105,'line: no right margin for direct labels');
+  await screenshot(main.locator('#plot'),'main-line-direct-labels.png');
   await main.evaluate(()=>VCStyle.set({theme:'mono'}));
   await main.selectOption('#chartType','grouped_bar');
   await main.click('#sample');
