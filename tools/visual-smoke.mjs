@@ -116,6 +116,62 @@ async function researchDiagram(context,id,engine,file){
   await page.close();
 }
 
+async function researchDenseDiagram(context,id,file){
+  const page=await context.newPage(),check=await attachDiagnostics(page,'research:dense:'+id);
+  await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
+  await page.evaluate(kind=>{
+    const input=document.querySelector('#json'),d=JSON.parse(input.value);
+    if(kind==='concept'){
+      const nodes=[{id:'concept',name:'中央核心概念：高密度研究架構'},...Array.from({length:16},(_,i)=>({id:'dense'+i,name:'長概念節點 '+(i+1)+'：自動換行、完整圓環與安全距離驗證'}))];
+      const links=Array.from({length:16},(_,i)=>({source:'concept',target:'dense'+i,relation:'關係 '+(i+1)+'：驗證避讓'}));
+      d.data={nodes,links};d.title='Concept 高密度回歸測試';
+    }else{
+      d.data={root:{name:'問題：高密度 Why 分析與長文字節點排版',children:Array.from({length:4},(_,i)=>({name:'主要原因 '+(i+1)+'：需要足夠層級間距',children:Array.from({length:3},(_,j)=>({name:'次要原因 '+(i+1)+'-'+(j+1)+'：這是一段較長文字用來驗證自動換行與 sibling gap'}))}))}};
+      d.title='Why 高密度回歸測試';
+    }
+    input.value=JSON.stringify(d,null,2);
+    document.querySelector('#title').value=d.title;
+  },id);
+  await page.click('#render');
+  await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
+  const status=await page.locator('#status').textContent();
+  if(!status?.includes('已完成')){await page.screenshot({path:path.join(OUT,`debug-research-dense-${id}.png`),fullPage:true,animations:'disabled'});throw new Error(`dense ${id}: render failed: ${status}`);}
+  const m=await page.evaluate(kind=>{
+    const svg=document.querySelector('#stage svg'),stage=document.querySelector('#stage');
+    const boxes=[...svg.querySelectorAll('.vc-diagram-node')].map(n=>{const r=n.getBoundingClientRect();return{id:n.dataset.nodeId,left:r.left,top:r.top,right:r.right,bottom:r.bottom,cx:(r.left+r.right)/2,cy:(r.top+r.bottom)/2};});
+    const labels=[...svg.querySelectorAll('.vc-edge-label-box')].map(n=>{const r=n.getBoundingClientRect();return{left:r.left,top:r.top,right:r.right,bottom:r.bottom};});
+    const overlaps=(a,b,pad=1)=>a.left<b.right-pad&&a.right>b.left+pad&&a.top<b.bottom-pad&&a.bottom>b.top+pad;
+    let nodeOverlap=0,labelNodeOverlap=0,labelLabelOverlap=0;
+    for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++)if(overlaps(boxes[i],boxes[j],1))nodeOverlap++;
+    for(const l of labels)for(const n of boxes)if(overlaps(l,n,1))labelNodeOverlap++;
+    for(let i=0;i<labels.length;i++)for(let j=i+1;j<labels.length;j++)if(overlaps(labels[i],labels[j],1))labelLabelOverlap++;
+    let quadrants=0;
+    if(kind==='concept'){
+      const hub=boxes.find(x=>x.id==='concept'),q=new Set();
+      for(const n of boxes.filter(x=>x.id!=='concept'))q.add((n.cx>=hub.cx?'R':'L')+(n.cy>=hub.cy?'B':'T'));
+      quadrants=q.size;
+    }
+    return {stageH:stage?.clientHeight||0,nodeCount:boxes.length,labelCount:labels.length,nodeOverlap,labelNodeOverlap,labelLabelOverlap,quadrants,bad:/NaN|Infinity|undefined/.test(svg?.outerHTML||'')};
+  },id);
+  assert(!m.bad,`dense ${id}: invalid SVG numeric output`);
+  assert(m.nodeOverlap===0,`dense ${id}: ${m.nodeOverlap} node collisions`);
+  if(id==='concept'){
+    assert(m.nodeCount===17,'dense concept: node count mismatch');
+    assert(m.labelCount===16,'dense concept: relation label count mismatch');
+    assert(m.quadrants===4,`dense concept: nodes do not use full 360 degrees (${m.quadrants} quadrants)`);
+    assert(m.labelNodeOverlap===0,`dense concept: ${m.labelNodeOverlap} relation labels overlap nodes`);
+    assert(m.labelLabelOverlap===0,`dense concept: ${m.labelLabelOverlap} relation labels overlap each other`);
+    assert(m.stageH>=580&&m.stageH<=700,`dense concept: unexpected adaptive height ${m.stageH}`);
+  }else{
+    assert(m.nodeCount===17,'dense why: node count mismatch');
+    assert(m.stageH>=650&&m.stageH<=700,`dense why: unexpected adaptive height ${m.stageH}`);
+  }
+  await screenshot(page.locator('#paper'),file);
+  check();
+  await page.close();
+}
+
 async function researchGantt(context){
   const page=await context.newPage(),check=await attachDiagnostics(page,'research:gantt');
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=gantt`,{waitUntil:'domcontentloaded'});
@@ -401,6 +457,8 @@ try{
 
   await researchDiagram(context,'why','vc-diagram-v1','research-why.png');
   await researchDiagram(context,'concept','vc-diagram-network-v1','research-concept.png');
+  await researchDenseDiagram(context,'why','research-why-dense.png');
+  await researchDenseDiagram(context,'concept','research-concept-dense.png');
   await researchDiagram(context,'flowchart','vc-diagram-flow-v1','research-flowchart.png');
   await researchDiagram(context,'stakeholder_system_map','vc-diagram-stakeholder-v1','research-stakeholder.png');
   await researchGantt(context);
@@ -414,7 +472,7 @@ try{
   handbookCheck();
   await handbook.close();
 
-  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, Flow, Stakeholder, adaptive Gantt and handbook.');
+  console.log('PASS: browser visual smoke for main, 3D, parallel, Why, Concept, dense Why/Concept regressions, Flow, Stakeholder, adaptive Gantt and handbook.');
 }finally{
   await browser.close();
 }
