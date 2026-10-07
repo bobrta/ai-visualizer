@@ -16,9 +16,9 @@ const fontPresets={
 let theme='executive',color=themes.executive.color,background=themes.executive.background,custom=false,font='modern';
 function state(){
  const base=themes[theme]||themes.executive,dark=background==='black';
- if(dark)return {theme,color,background,bg:'#0B0F14',fg:'#F3F6F8',muted:'#B7C0C8',grid:'#2B343D',surface:'#111820',accent:visible(color),positive:'#76B982',negative:'#E07B72',warning:'#D8B45C',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
- if(custom)return {theme:'custom',color,background,bg:'#FFFFFF',fg:'#1D2A36',muted:'#697886',grid:'#E6EBF0',surface:'#FFFFFF',accent:color,positive:'#3A7D44',negative:'#B24A4A',warning:'#C6892D',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
- return {...base,theme,color:base.color,bg:base.surface,fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
+ if(dark)return {theme,font,color,background,bg:'#0B0F14',fg:'#F3F6F8',muted:'#B7C0C8',grid:'#2B343D',surface:'#111820',accent:visible(color),positive:'#76B982',negative:'#E07B72',warning:'#D8B45C',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
+ if(custom)return {theme:'custom',font,color,background,bg:'#FFFFFF',fg:'#1D2A36',muted:'#697886',grid:'#E6EBF0',surface:'#FFFFFF',accent:color,positive:'#3A7D44',negative:'#B24A4A',warning:'#C6892D',fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
+ return {...base,theme,font,color:base.color,bg:base.surface,fontFamily:fontPresets[font].body,titleFamily:fontPresets[font].title};
 }
 function visible(hex){if(background!=='black')return hex;const v=hex.slice(1).match(/../g).map(x=>parseInt(x,16));if((.2126*v[0]+.7152*v[1]+.0722*v[2])<105)return '#'+v.map(n=>Math.round(n+(255-n)*.4).toString(16).padStart(2,'0')).join('');return hex;}
 function palette(){const base=themes[theme]||themes.executive;if(!custom)return base.palette.map(visible);const i=colors.findIndex(c=>c[1]===color),offsets=[0,7,12,4,15,10];return offsets.map(n=>visible(colors[(i+n+colors.length)%colors.length][1]));}
