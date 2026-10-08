@@ -1,13 +1,11 @@
-/* Template library UX: categories, work-mode recommendations, search and recents. */
+/* Workbench template picker: simple categories, search and recents. */
 'use strict';
 (()=>{
   const $=id=>document.getElementById(id);
   const grid=$('templateGrid'),search=$('templateSearch'),tabs=$('categoryTabs'),count=$('templateCount');
   if(!grid||!search||!tabs||typeof CHARTS==='undefined')return;
   const RECENT_KEY='visual-canvas-recent-templates-v1';
-  const MODE_KEY='visual-canvas-work-mode-v1';
   const ranges=[
-    {id:'recommended',label:'⭐ 推薦'},
     {id:'all',label:'全部',start:0,end:999},
     {id:'data',label:'📊 數據圖表',start:0,end:29},
     {id:'learning',label:'🧠 學習理解',start:30,end:49},
@@ -73,21 +71,13 @@
   grid.addEventListener('click',e=>{const card=e.target.closest('.template-card');if(card)remember(card.dataset.type);},true);
   const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,'');
 
-  function recommended(card){
-    if(mode==='all')return true;
-    const set=modeRecommended[mode]||modeRecommended.business;
-    return set.has(card.dataset.type)||
-      (mode==='business'&&['strategy'].includes(card.dataset.category))||
-      (mode==='research'&&['ie'].includes(card.dataset.category))||
-      (mode==='learning'&&['learning'].includes(card.dataset.category));
-  }
   function render(){
     const q=norm(search.value);let visible=0;
     cards.forEach(card=>{
-      const inCategory=active==='all'||(active==='recent'?recents.includes(card.dataset.type):active==='advisor'?(advisorTypes?.has(card.dataset.type)??false):active==='recommended'?recommended(card):card.dataset.category===active);
+      const inCategory=active==='all'||(active==='recent'?recents.includes(card.dataset.type):card.dataset.category===active);
       const hay=norm(card.dataset.name+' '+card.dataset.type+' '+card.dataset.desc+' '+card.textContent);
       const show=inCategory&&(!q||hay.includes(q));card.hidden=!show;
-      card.classList.toggle('mode-recommended',recommended(card));if(show)visible++;
+      card.classList.remove('mode-recommended');if(show)visible++;
     });
     tabs.querySelectorAll('.category-tab').forEach(b=>b.classList.toggle('active',b.dataset.category===active));
     const labels={business:'商業簡報',research:'研究專題',learning:'學習整理',all:'全功能'};
@@ -97,15 +87,9 @@
       empty.textContent=active==='recent'&&!recents.length?'還沒有最近使用的圖形。':'找不到符合條件的圖形，試試較短的關鍵字。';
     }else empty?.remove();
   }
-  function setMode(next){
-    mode=['business','research','learning','all'].includes(next)?next:'business';
-    try{localStorage.setItem(MODE_KEY,mode);}catch{}
-    active='recommended';search.value='';render();
-  }
-
   search.addEventListener('input',render);
   search.addEventListener('keydown',e=>{if(e.key==='Escape'){search.value='';render();search.blur();}});
   $('templates')?.addEventListener('click',()=>requestAnimationFrame(()=>{search.focus();render();}));
-  window.VCTemplateLibrary={setMode,getMode:()=>mode,showRecommended:()=>{active='recommended';render();},showAdvisorTypes:(types)=>{advisorTypes=new Set(types||[]);active='advisor';search.value='';render();}};
+  window.VCTemplateLibrary={getMode:()=> 'all',showRecommended:()=>{active='all';render();}};
   render();
 })();
