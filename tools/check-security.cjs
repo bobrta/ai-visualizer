@@ -27,7 +27,7 @@ for(const required of [
 ]) assert(server.includes(required),'local server missing '+required);
 
 const offline=read('tools/offline_setup.py');
-assert((offline.match(/"sha256_prefix"/g)||[]).length===3,'all three offline assets need integrity pins');
+assert((offline.match(/^\s*"sha256_prefix"\s*:/gm)||[]).length===3,'all three offline assets need integrity pins');
 for(const version of ['plotly-4.1.1.min.js','echarts-5.6.0.min.js','mermaid-11.4.1.min.js']){
   assert(offline.includes(version),'offline setup missing fixed version '+version);
 }
