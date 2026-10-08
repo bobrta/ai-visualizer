@@ -29,7 +29,7 @@ function spreadNetwork(data,{centerId=null,maxNodeWidth=220}={}){
  nodes=E.avoidCollisions(nodes,{gap:nodeGap,iterations:160,axis:'both'});
  const h2=nodes.find(n=>n.id===hub);nodes=nodes.map(n=>({...n,x:n.x-h2.x,y:n.y-h2.y}));
  let b=E.bounds(nodes,58),sx=58-b.x,sy=58-b.y;nodes=nodes.map(n=>({...n,x:n.x+sx,y:n.y+sy}));b=E.bounds(nodes,58);
- return {...ir,nodes,meta:{...ir.meta,hub,ringGap:baseRingGap,ringRadii,nodeGap,hubSafeRadius:hubSafe,maxNodeWidth:adaptiveWidth,layoutVersion:'p3'},bounds:b};
+ return {...ir,nodes,meta:{...ir.meta,hub,ringGap:baseRingGap,ringRadii,nodeGap,hubSafeRadius:hubSafe,maxNodeWidth:adaptiveWidth,layoutVersion:'p6'},bounds:b};
 }
 function placeLabel(route,label,nodes,occupied,{fontSize=11,maxWidth=155}={}){
  const m=E.wrapText(label,{fontSize,maxWidth,maxLines:2}),base=route.labelPoint,dx=route.t.x-route.s.x,dy=route.t.y-route.s.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
