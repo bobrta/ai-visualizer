@@ -116,6 +116,8 @@ jobs:
         run: node tools/check-secondary-interfaces.cjs
       - name: Check local security invariants
         run: node tools/check-security.cjs
+      - name: Check architecture boundaries
+        run: node tools/check-architecture.cjs
       - name: Check Diagram Engine v1
         run: node tools/check-diagram-engine.cjs
       - name: Check Research Figure Layout
