@@ -84,8 +84,9 @@ async function researchDiagram(context,id,engine,file){
   await page.click('#render');
   await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
   const researchStatus=await page.locator('#status').textContent();
-  const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length}));
+  const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length,nav:[...document.querySelectorAll('header .studio-nav a')].map(a=>a.textContent.trim())}));
   console.log('RESEARCH-DIAG',id,JSON.stringify(researchDiag));
+  assert(researchDiag.nav.includes('工作台')&&researchDiag.nav.includes('圖表指南')&&researchDiag.nav.includes('研究工作室'),id+': three-way navigation missing');
   if(!researchStatus?.includes('已完成')){await page.screenshot({path:path.join(OUT,`debug-research-${id}.png`),fullPage:true,animations:'disabled'});throw new Error(`${id}: Research Studio render failed: ${researchStatus}`);}
   const m=await page.evaluate(()=>{
     const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),sr=svg?.getBoundingClientRect();
@@ -278,23 +279,36 @@ try{
   await main.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
   await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
   assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
-  await main.waitForSelector('#simpleWorkbench',{state:'visible',timeout:5000});
-  await main.click('#workbenchChooseChart');
+  await main.waitForSelector('#templates',{state:'visible',timeout:5000});
+  await main.click('#templates');
   await main.waitForSelector('#library[open]',{state:'visible',timeout:5000});
   await main.locator('.template-card[data-type="bar"]').click();
   await main.waitForFunction(()=>document.querySelector('#chartType')?.value==='bar'&&document.querySelector('#fields')?.textContent?.includes('圖形標題'),null,{timeout:5000});
-  const switcher=await main.evaluate(()=>({
-    current:document.querySelector('#workbenchChartName')?.textContent||'',
-    hiddenLegacy:getComputedStyle(document.querySelector('#chartType')).display==='none',
-    hasProjectManager:Boolean(document.querySelector('#projectManager')),
+  const workbenchUI=await main.evaluate(()=>({
+    chartType:document.querySelector('#chartType')?.value||'',
+    chartTypeVisible:getComputedStyle(document.querySelector('#chartType')).display!=='none',
     status:document.querySelector('#status')?.textContent||'',
-    fontCount:Object.keys(window.VCStyle?.fontPresets||{}).length
+    fontCount:Object.keys(window.VCStyle?.fontPresets||{}).length,
+    fontOptions:document.querySelectorAll('#appearance .font-select option').length,
+    nav:[...document.querySelectorAll('header .workbench-nav a')].map(a=>a.textContent.trim())
   }));
-  assert(switcher.current.includes('長條'),'main: workbench chart name did not switch to bar');
-  assert(switcher.hiddenLegacy,'main: legacy chart dropdown should be hidden from visible workflow');
-  assert(!switcher.hasProjectManager,'main: project manager must not occupy the simple workbench');
-  assert(switcher.status.includes('已切換到'),'main: chart switch status missing');
-  assert(switcher.fontCount===5,'main: expected five report font presets');
+  assert(workbenchUI.chartType==='bar','main: card selection did not switch to bar');
+  assert(workbenchUI.chartTypeVisible,'main: original chart dropdown should remain visible');
+  assert(workbenchUI.status.includes('已切換到'),'main: chart switch status missing');
+  assert(workbenchUI.fontCount===5&&workbenchUI.fontOptions===5,'main: expected five font choices');
+  assert(workbenchUI.nav.includes('工作台')&&workbenchUI.nav.includes('圖表指南')&&workbenchUI.nav.includes('研究工作室'),'main: three-way navigation missing');
+  await main.selectOption('#appearance .font-select','ming');
+  await main.evaluate(()=>window.VCApplyTemplate?.('bar'));
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  const fontUI=await main.evaluate(()=>({
+    selected:document.querySelector('#appearance .font-select')?.value||'',
+    state:window.VCStyle?.state?.().font||'',
+    family:document.querySelector('#plot')?.layout?.font?.family||''
+  }));
+  assert(fontUI.selected==='ming'&&fontUI.state==='ming','main: font selector did not update shared style state');
+  assert(/PMingLiU|MingLiU|Songti/i.test(fontUI.family),'main: selected report font did not reach Plotly output');
+  await main.selectOption('#appearance .font-select','modern');
   await assertNoBodyOverflow(main,'main',8);
 
   const guide=await context.newPage(),guideCheck=await attachDiagnostics(guide,'chart-guide');
@@ -307,13 +321,15 @@ try{
     recommend:document.querySelectorAll('#recommendGrid .recommend-card').length,
     cards:document.querySelectorAll('#charts .chart-card').length,
     hasWorkbenchLink:[...document.querySelectorAll('#charts .chart-card a')].some(a=>a.href.includes('index.html?template=')),
-    active:document.querySelector('#intentGrid .intent.active')?.dataset.intent||''
+    active:document.querySelector('#intentGrid .intent.active')?.dataset.intent||'',
+    nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim())
   }));
   assert(guideUI.intents>=8,'chart-guide: intent selector missing');
   assert(guideUI.recommend>=3,'chart-guide: recommendations missing');
   assert(guideUI.cards>=1,'chart-guide: filtered chart cards missing');
   assert(guideUI.hasWorkbenchLink,'chart-guide: workbench handoff link missing');
   assert(guideUI.active==='compare','chart-guide: compare intent did not activate');
+  assert(guideUI.nav.includes('工作台')&&guideUI.nav.includes('圖表指南')&&guideUI.nav.includes('研究工作室'),'chart-guide: three-way navigation missing');
   await assertNoBodyOverflow(guide,'chart-guide',8);
   await screenshot(guide.locator('.page'),'chart-guide.png');
   guideCheck();
@@ -445,7 +461,6 @@ try{
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
 
-  await main.locator('.workbench-settings').evaluate(el=>{el.open=true;});
   await main.selectOption('#executiveLayoutMode','top_kpi');
   await main.waitForTimeout(900);
   const manualTop=await main.evaluate(()=>({
@@ -544,7 +559,9 @@ try{
   const handbook=await context.newPage(),handbookCheck=await attachDiagnostics(handbook,'handbook');
   await handbook.goto(BASE+'/guides/chart-handbook/index.html',{waitUntil:'domcontentloaded'});
   await handbook.waitForFunction(()=>document.querySelector('#count')?.textContent.includes('100 / 100'),null,{timeout:10000});
-  assert(await handbook.getByText('進階色庫 · 40 色').count()===1,'handbook: 40-color appearance control missing');
+  const handbookAppearance=await handbook.evaluate(()=>({colors:document.querySelectorAll('#handbookAppearance .color-chip').length,fonts:document.querySelectorAll('#handbookAppearance .font-select option').length}));
+  assert(handbookAppearance.colors===20,'handbook: expected restored 20-color appearance control');
+  assert(handbookAppearance.fonts===5,'handbook: expected five font choices');
   await assertNoBodyOverflow(handbook,'handbook',8);
   await screenshot(handbook.locator('main'),'handbook.png');
   handbookCheck();
