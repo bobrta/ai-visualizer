@@ -12,9 +12,9 @@ echo Python 3 not found. Install Python 3 and enable "Add Python to PATH".
 exit /b 1
 
 :use_py
-py -3 tools\local_server.py %*
+py -3 tools\local_server.py --port 4173 %*
 exit /b %ERRORLEVEL%
 
 :use_python
-python tools\local_server.py %*
+python tools\local_server.py --port 4173 %*
 exit /b %ERRORLEVEL%
