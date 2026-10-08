@@ -26,7 +26,7 @@ for(const [type,name]of CHARTS){const card=document.createElement('button');card
 async function clipboard(text){try{await navigator.clipboard.writeText(text);$('status').textContent='已複製。';}catch{$('input').value=text;showMode(false);$('input').focus();$('input').select();$('status').textContent='瀏覽器未允許自動複製；文字已選取，請按 Ctrl+C／⌘C。';}}
 $('copyCommand').onclick=()=>{try{const d=formMode?collectForm():JSON.parse($('input').value);clipboard(JSON.stringify(d,null,2));}catch(e){$('status').textContent=e.message;}};
 $('copyPrompt').onclick=()=>{const type=$('chartType').value;clipboard('請將我提供的資料整理成 '+CHARTS.find(c=>c[0]===type)[1]+' 指令。只輸出合法 JSON，不加程式碼圍欄。依下面格式保留欄位與資料形狀，替換範例內容；陣列長度須一致。忠於來源，不能捏造數據。缺少必要資料時，先詢問我。這是合成範例：\n'+JSON.stringify(chartExample(type),null,2)+'\n\n我的資料：');};
-fillForm(chartExample('mindmap'));showMode(true);
+applyTemplate($('chartType').value||'mindmap');
 $('json').onclick=()=>{try{const d=formMode?collectForm():JSON.parse($('input').value);if(chartData?.report)d.report=chartData.report;d.presentation=VCStyle.state();save(JSON.stringify(d,null,2),'application/json','visual-command.json');}catch(e){$('status').textContent=e.message;}};
 const originalSync=sync;sync=()=>{originalSync();fillForm(JSON.parse($('input').value));};
 
