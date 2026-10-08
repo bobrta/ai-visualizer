@@ -108,25 +108,33 @@ async function researchDiagram(context,id,engine,file){
       edgeLabels:rects('[data-edge-label-box="1"]'),
       routeFallbacks:Number(svg?.dataset.routeFallbacks||0),
       fitScale:Number(svg?.dataset.fitScale||1),
-      treeSourceYs:[...(svg?.querySelectorAll?.('[data-tree-edge="1"]')||[])].map(n=>Number(n.dataset.sourceY)).filter(Number.isFinite)
+      treeSourceYs:[...(svg?.querySelectorAll?.('[data-tree-edge="1"]')||[])].map(n=>Number(n.dataset.sourceY)).filter(Number.isFinite),
+      nodeRoles:[...(svg?.querySelectorAll?.('[data-node-role]')||[])].map(n=>n.dataset.nodeRole),
+      edgeRoles:[...(svg?.querySelectorAll?.('[data-edge-role]')||[])].map(n=>n.dataset.edgeRole),
+      treeEdgeRoles:[...(svg?.querySelectorAll?.('[data-tree-edge-role]')||[])].map(n=>n.dataset.treeEdgeRole),
+      densityMode:svg?.dataset.densityMode||''
     };
   });
   assert(m.engine===engine,`${id}: expected ${engine}, got ${m.engine||'none'}`);
   assert(m.layoutEngine,`${id}: Research Figure Layout engine missing`);
   if(id==='why'){
     assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.treeP1&&m.layoutVersion==='p3',`${id}: Why P3 layout override missing`);
+    assert(m.treeP1&&m.layoutVersion==='p6',`${id}: Why P6 layout override missing`);
     assert(m.treeLevelGap>=120&&m.treeSiblingGap>=30,`${id}: adaptive tree gaps missing ${m.treeLevelGap}/${m.treeSiblingGap}`);
     assert(new Set(m.treeSourceYs.map(y=>Math.round(y))).size>=2,`${id}: child edges are not fanned out from the parent`);
+    assert(m.nodeRoles.includes('root')&&m.nodeRoles.includes('primary'),`${id}: Why hierarchy roles missing`);
+    assert(m.treeEdgeRoles.includes('primary'),`${id}: Why primary edge role missing`);
   }
   if(id==='concept'){
     assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.networkP1&&m.layoutVersion==='p3',`${id}: Concept P3 layout override missing`);
+    assert(m.networkP1&&m.layoutVersion==='p6',`${id}: Concept P6 layout override missing`);
     const overlaps=(arr,gap=1)=>{let n=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){const a=arr[i],b=arr[j];if(a.left<b.right-gap&&a.right>b.left+gap&&a.top<b.bottom-gap&&a.bottom>b.top+gap)n++;}return n;};
     assert(overlaps(m.nodes,2)===0,`${id}: rendered nodes overlap`);
     assert(overlaps(m.edgeLabels,1)===0,`${id}: rendered relation labels overlap`);
     assert(m.fitScale>0&&m.fitScale<=1,`${id}: invalid P3 fit scale ${m.fitScale}`);
     assert(m.routeFallbacks>=0,`${id}: route fallback count missing`);
+    assert(m.nodeRoles.includes('hub')&&m.nodeRoles.includes('primary'),`${id}: P5/P6 node hierarchy missing`);
+    assert(m.edgeRoles.includes('spoke'),`${id}: P5/P6 edge hierarchy missing`);
   }
   assert(m.stage?.w>300&&m.stage?.h>200,`${id}: invalid preview size`);
   assert(m.svg?.w>300&&m.svg?.h>200,`${id}: missing/undersized SVG`);
@@ -188,7 +196,7 @@ async function researchDenseDiagram(context,id,file){
       bad:/NaN|Infinity|undefined/.test(svg?.outerHTML||'')
     };
   },id);
-  assert(m.layoutVersion==='p3',`dense ${id}: P3 layout not active`);
+  assert(m.layoutVersion==='p6',`dense ${id}: P6 layout not active`);
   assert(!m.bad,`dense ${id}: invalid SVG numeric output`);
   assert(m.nodeOverlap===0,`dense ${id}: ${m.nodeOverlap} node collisions`);
   if(id==='concept'){
@@ -198,6 +206,7 @@ async function researchDenseDiagram(context,id,file){
     assert(m.labelNodeOverlap===0,`dense concept: ${m.labelNodeOverlap} relation labels overlap nodes`);
     assert(m.labelLabelOverlap===0,`dense concept: ${m.labelLabelOverlap} relation labels overlap each other`);
     assert(m.stageH>=580&&m.stageH<=700,`dense concept: unexpected adaptive height ${m.stageH}`);
+    assert(await page.evaluate(()=>document.querySelector('#stage svg')?.dataset.densityMode==='dense'),'dense concept: P6 density declutter mode missing');
   }else{
     assert(m.nodeCount===17,`dense why: expected 17 nodes, got ${m.nodeCount}`);
     assert(m.stageH>=650&&m.stageH<=700,`dense why: unexpected adaptive height ${m.stageH}`);
