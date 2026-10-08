@@ -48,24 +48,26 @@ function set(next){
 }
 function mount(host,onchange){
  host.classList.add('appearance-panel');
- const label=document.createElement('strong');label.textContent='簡報視覺主題';host.append(label);
- const select=document.createElement('select');select.className='theme-select';select.setAttribute('aria-label','簡報視覺主題');
- for(const [id,t] of Object.entries(themes)){const o=document.createElement('option');o.value=id;o.textContent=t.name;select.append(o);}
- select.onchange=()=>{set({theme:select.value});refresh();onchange?.();};host.append(select);
- const themeInfo=document.createElement('small');themeInfo.className='theme-info';host.append(themeInfo);
- const fontTitle=document.createElement('span');fontTitle.className='appearance-subtitle';fontTitle.textContent='簡報字體';host.append(fontTitle);
- const fontSelect=document.createElement('select');fontSelect.className='font-select';fontSelect.setAttribute('aria-label','簡報字體');
+ const legacyColors=[
+  ['學術藍','#0072B2'],['鈷藍','#315DA8'],['靛藍','#5552A3'],['紫羅蘭','#8561A9'],['紫紅','#AA5388'],
+  ['玫瑰','#C45D7A'],['磚紅','#B34D48'],['朱紅','#D55E00'],['琥珀','#C58B20'],['金黃','#E0AF32'],
+  ['橄欖','#7C8F41'],['草綠','#5B9957'],['翠綠','#009E73'],['青綠','#238B8D'],['孔雀藍','#287C99'],
+  ['天藍','#56B4E9'],['灰藍','#647C95'],['深海藍','#24476A'],['可可','#8A6854'],['石板灰','#64748B']
+ ];
+ const colorLabel=document.createElement('strong');colorLabel.textContent='圖表主色 · 20 色';host.append(colorLabel);
+ const grid=document.createElement('div');grid.className='color-grid';const buttons=[];
+ for(const [name,hex]of legacyColors){const b=document.createElement('button');b.type='button';b.className='color-chip';b.style.backgroundColor=hex;b.title=name+' '+hex;b.setAttribute('aria-label',name+' '+hex);b.onclick=()=>{set({color:hex});refresh();onchange?.();};buttons.push([b,hex]);grid.append(b);}
+ host.append(grid);
+ const fontRow=document.createElement('label');fontRow.className='appearance-simple-row';fontRow.textContent='圖表字體 ';
+ const fontSelect=document.createElement('select');fontSelect.className='font-select';fontSelect.setAttribute('aria-label','圖表字體');
  for(const [id,f] of Object.entries(fontPresets)){const o=document.createElement('option');o.value=id;o.textContent=f.name;fontSelect.append(o);}
- fontSelect.onchange=()=>{set({font:fontSelect.value});refresh();onchange?.();};host.append(fontSelect);
- const paletteTitle=document.createElement('span');paletteTitle.className='appearance-subtitle';paletteTitle.textContent='目前主題色盤';host.append(paletteTitle);
- const themeStrip=document.createElement('div');themeStrip.className='theme-palette-strip';host.append(themeStrip);
- const advanced=document.createElement('details');advanced.className='advanced-colors';const summary=document.createElement('summary');summary.textContent='進階色庫 · 40 色';advanced.append(summary);const buttons=[];
- for(const [family,list] of Object.entries(colorFamilies)){const section=document.createElement('div');section.className='color-family';const familyName=document.createElement('span');familyName.className='color-family-name';familyName.textContent=familyLabels[family];section.append(familyName);const grid=document.createElement('div');grid.className='color-grid';for(const [name,hex] of list){const b=document.createElement('button');b.type='button';b.className='color-chip';b.style.backgroundColor=hex;b.title=name+' '+hex;b.setAttribute('aria-label',name+' '+hex);b.onclick=()=>{set({color:hex});refresh();onchange?.();};buttons.push([b,hex]);grid.append(b);}section.append(grid);advanced.append(section);}host.append(advanced);
- const row=document.createElement('label');row.textContent='背景 ';const bgSelect=document.createElement('select');bgSelect.setAttribute('aria-label','圖表背景');
- for(const [value,name]of [['white','白色'],['black','深色']]){const o=document.createElement('option');o.value=value;o.textContent=name;bgSelect.append(o);}
- bgSelect.onchange=()=>{set({background:bgSelect.value});refresh();onchange?.();};row.append(bgSelect);host.append(row);
- const info=document.createElement('small');info.textContent='主題會統一標題、座標、格線、圖例與系列配色；自訂色仍可覆蓋主色。';host.append(info);
- function refresh(){select.value=theme;fontSelect.value=font;bgSelect.value=background;themeInfo.textContent=(themes[theme]||themes.executive).desc;themeStrip.replaceChildren(...palette().map(hex=>{const sw=document.createElement('span');sw.className='theme-palette-chip';sw.style.backgroundColor=hex;sw.title=hex;return sw;}));buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
+ fontSelect.onchange=()=>{set({font:fontSelect.value});refresh();onchange?.();};fontRow.append(fontSelect);host.append(fontRow);
+ const bgRow=document.createElement('label');bgRow.className='appearance-simple-row';bgRow.textContent='圖表背景 ';
+ const bgSelect=document.createElement('select');bgSelect.setAttribute('aria-label','圖表背景');
+ for(const [value,name]of [['white','白色'],['black','黑色']]){const o=document.createElement('option');o.value=value;o.textContent=name;bgSelect.append(o);}
+ bgSelect.onchange=()=>{set({background:bgSelect.value});refresh();onchange?.();};bgRow.append(bgSelect);host.append(bgRow);
+ const info=document.createElement('small');info.textContent='主色帶動配色；字體只改作品，不改工作台介面。匯出會保留字體與底色。';host.append(info);
+ function refresh(){fontSelect.value=font;bgSelect.value=background;buttons.forEach(([b,hex])=>b.setAttribute('aria-pressed',String(custom&&hex===color)));}
  refresh();return {refresh};
 }
 function inkOn(hex){const a=hex.slice(1).match(/../g).map(x=>parseInt(x,16));return (.2126*a[0]+.7152*a[1]+.0722*a[2])>145?'#111827':'#ffffff';}
