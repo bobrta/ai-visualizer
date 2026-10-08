@@ -12,7 +12,7 @@ for(let i=1;i<18;i++)links.push({source:'n0',target:'n'+i,relation:'關係 '+i})
 for(let i=1;i<10;i++)links.push({source:'n'+i,target:'n'+(i+8),relation:'延伸 '+i});
 const L=N.spreadNetwork({nodes,links},{centerId:'n0'});
 assert.equal(L.meta.hub,'n0');
-assert.equal(L.meta.layoutVersion,'p2','second-batch network layout active');
+assert.equal(L.meta.layoutVersion,'p3','third-batch network layout active');
 assert(L.meta.ringGap>=300,'dense network expands base ring gap');
 assert(L.meta.ringRadii[1]>=L.meta.ringGap,'first ring respects density-aware radius');
 assert(L.meta.nodeGap>=40,'dense network expands node gap');
@@ -49,6 +49,16 @@ for(const n of dense.nodes.filter(n=>n.id!=='hub')){
 }
 for(let i=0;i<dense.nodes.length;i++)for(let j=i+1;j<dense.nodes.length;j++)assert(!E.rectOverlap(dense.nodes[i],dense.nodes[j],4),`dense network overlap: ${dense.nodes[i].id}/${dense.nodes[j].id}`);
 
+const routeHub=N.spreadNetwork({nodes:[
+ {id:'hub',name:'中心'},{id:'left',name:'左側節點'},{id:'right',name:'右側節點'},{id:'top',name:'上方節點'}
+],links:[
+ {source:'hub',target:'left',relation:'A'},{source:'hub',target:'right',relation:'B'},
+ {source:'hub',target:'top',relation:'C'},{source:'left',target:'right',relation:'跨中心'}
+]},{centerId:'hub'});
+const routeMap=new Map(routeHub.nodes.map(n=>[n.id,n])),cross=N.chooseRoute(routeMap.get('left'),routeMap.get('right'),routeHub.nodes,routeMap.get('hub'),routeHub.meta.hubSafeRadius,3);
+assert(cross&&cross.control&&Number.isFinite(cross.control.x)&&Number.isFinite(cross.control.y),'obstacle-aware cross-link route returned');
+assert(['clear','fallback'].includes(cross.mode),'route mode is reported');
+
 const tree={name:'這是一個很長的核心研究問題文字',children:[
  {name:'第一條可能原因與說明',children:[{name:'次層原因 A'},{name:'次層原因 B'}]},
  {name:'第二條可能原因與說明'},
@@ -67,5 +77,9 @@ const dp=T.plan(denseTree,{maxNodeWidth:300});
 assert(dp.levelGap>p.levelGap,'dense Why tree increases level gap');
 assert(dp.siblingGap>p.siblingGap,'dense Why tree increases sibling gap');
 assert(dp.maxNodeWidth>=370,'dense long Why labels widen nodes');
+const treeLayout=E.layoutTree(denseTree,{direction:'LR',fontSize:15,maxNodeWidth:dp.maxNodeWidth,levelGap:dp.levelGap,siblingGap:dp.siblingGap,padding:40});
+const rootNode=treeLayout.nodes.find(n=>n.level===0),children=treeLayout.nodes.filter(n=>n.level===1);
+const fanYs=children.map((n,i)=>T.routeTreeEdge(rootNode,n,{index:i,total:children.length,direction:'LR'}).sourcePoint.y);
+assert(new Set(fanYs.map(x=>Math.round(x))).size>=Math.min(3,children.length),'dense Why branches fan out from distinct source points');
 
-console.log('PASS: P2 360 network, center safety, density rings, label collision avoidance and adaptive Why spacing.');
+console.log('PASS: P3 weighted 360 network, obstacle-aware routing, relation-label avoidance and adaptive Why fan-out.');
