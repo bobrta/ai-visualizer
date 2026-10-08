@@ -67,12 +67,14 @@ function exportPlotConfig(p){
     growFont(t.textfont);growFont(t.insidetextfont);growFont(t.outsidetextfont);
     if(t.type==='table'){
       growFont(t.header?.font);growFont(t.cells?.font);
+      if(t.header?.font)t.header.font.size=Math.max(24,t.header.font.size||0);
+      if(t.cells?.font)t.cells.font.size=Math.max(22,t.cells.font.size||0);
       const rows=Array.isArray(t.cells?.values?.[0])?t.cells.values[0].length:1;
-      const targetTableHeight=Math.round(p.height*.54);
-      const headerHeight=Math.max(Math.round((t.header?.height||42)*scale),Math.round(54*scale));
+      const targetTableHeight=Math.round(p.height*.58);
+      const headerHeight=Math.max(Math.round((t.header?.height||42)*scale),72);
       if(t.header)t.header.height=headerHeight;
-      if(t.cells)t.cells.height=Math.max(Math.round((t.cells.height||34)*scale),Math.floor((targetTableHeight-headerHeight)/Math.max(1,rows)));
-      t.domain={...(t.domain||{}),x:[.04,.96],y:[.16,.86]};
+      if(t.cells)t.cells.height=Math.max(Math.round((t.cells.height||34)*scale),Math.floor((targetTableHeight-headerHeight)/Math.max(1,rows)),84);
+      t.domain={...(t.domain||{}),x:[.035,.965],y:[.13,.89]};
     }
   }
   layout.width=p.width;layout.height=p.height;layout.autosize=false;
