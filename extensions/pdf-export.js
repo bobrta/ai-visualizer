@@ -1,13 +1,14 @@
 /* Direct PDF download with selectable page formats.
-   Charts are embedded as high-resolution JPEG. No server upload or PDF CDN. */
+   Vector/SVG sources are rasterized once at print-quality resolution before PDF embedding.
+   No server upload or PDF CDN. */
 (()=>{'use strict';
 const enc=s=>new TextEncoder().encode(s);
 const PAGE_FORMATS={
-  a4_landscape:{label:'A4 橫式',points:[841.89,595.28],pixels:[2526,1786]},
-  a4_portrait:{label:'A4 直式',points:[595.28,841.89],pixels:[1786,2526]},
-  slide_16_9:{label:'16:9 簡報',points:[960,540],pixels:[2880,1620]},
-  slide_4_3:{label:'4:3 簡報',points:[720,540],pixels:[2160,1620]},
-  square:{label:'1:1 方形',points:[720,720],pixels:[2160,2160]}
+  a4_landscape:{label:'A4 橫式',points:[841.89,595.28],pixels:[3508,2480]},
+  a4_portrait:{label:'A4 直式',points:[595.28,841.89],pixels:[2480,3508]},
+  slide_16_9:{label:'16:9 簡報',points:[960,540],pixels:[4000,2250]},
+  slide_4_3:{label:'4:3 簡報',points:[720,540],pixels:[3000,2250]},
+  square:{label:'1:1 方形',points:[720,720],pixels:[3000,3000]}
 };
 function pdfBytes(jpeg,width,height,pagePoints){
  if(!(jpeg instanceof Uint8Array)||jpeg.length<4||jpeg[0]!==255||jpeg[1]!==216)throw Error('PDF 圖片資料無效。');
@@ -43,7 +44,7 @@ async function exportPDF({title='Visual Canvas 圖表',subtitle='',image,caption
  const ratio=Math.min(available/img.naturalWidth,areaHeight/img.naturalHeight);if(!Number.isFinite(ratio)||ratio<=0)throw Error('PDF 文字過多，請縮短標題或圖說。');
  const w=img.naturalWidth*ratio,h=img.naturalHeight*ratio;g.drawImage(img,pad+(available-w)/2,top+(areaHeight-h)/2,w,h);
  top=canvas.height-pad-bottomReserve;for(const note of footnotes)textBlock(note,footSize,'#475569',5);
- let jpeg;try{jpeg=decodeJpeg(canvas.toDataURL('image/jpeg',.94));}catch{throw Error('圖片無法轉成 PDF，請確認圖形不含外部圖片。');}
+ let jpeg;try{jpeg=decodeJpeg(canvas.toDataURL('image/jpeg',.985));}catch{throw Error('圖片無法轉成 PDF，請確認圖形不含外部圖片。');}
  const bytes=pdfBytes(jpeg,canvas.width,canvas.height,preset.points),blob=new Blob([bytes],{type:'application/pdf'}),name=(filename||String(title||'chart').slice(0,80)).replace(/[\\/:*?"<>|\x00-\x1f]/g,'-').replace(/\.pdf$/i,'')+'.pdf';
  const downloadURL=downloadFile?download(blob,name):null;return {blob,filename:name,bytes:bytes.length,downloadURL,pageFormat,label:preset.label};
 }
