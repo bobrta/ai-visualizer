@@ -292,6 +292,10 @@ try{
   await main.waitForSelector('#templates',{state:'visible',timeout:5000});
   await main.click('#templates');
   await main.waitForSelector('#library[open]',{state:'visible',timeout:5000});
+  await main.locator('.category-tab[data-category="time"]').click();
+  const timeVisible=await main.locator('.template-card:not([hidden])').count();
+  assert(timeVisible>0,'main: time-management category should contain charts');
+  await main.locator('.category-tab[data-category="all"]').click();
   await main.locator('.template-card[data-type="bar"]').click();
   await main.waitForFunction(()=>document.querySelector('#chartType')?.value==='bar'&&document.querySelector('#fields')?.textContent?.includes('圖形標題'),null,{timeout:5000});
   const workbenchUI=await main.evaluate(()=>({
