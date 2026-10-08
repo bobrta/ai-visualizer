@@ -22,6 +22,13 @@ Visual Canvas 現在採 **local-first**：程式與資料主要在自己的電�
 4. macOS 也提供 `setup-offline.command` 與 `start-local.command` 作為快捷入口；若 Finder 阻擋執行，可先用上面的 Python 指令。
 5. 不建議直接用 `file://...` 雙擊 `index.html`：ES module、瀏覽器安全限制與本機資源載入在不同瀏覽器下可能不一致。
 
+### Windows
+
+1. 下載並解壓縮整個專案。
+2. 第一次有網路時雙擊 `setup-offline.bat`，或在命令提示字元執行 `python tools\offline_setup.py`。
+3. 之後雙擊 `start-local.bat`，瀏覽器會自動開啟 localhost。
+4. Windows 與 macOS 共用相同 Python 核心；差別只有快捷啟動檔（`.bat` / `.command`）。
+
 ### 日常操作
 
 - 左側選圖表類型，按「範例」試畫；每種都有可編輯 JSON。
