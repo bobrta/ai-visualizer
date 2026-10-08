@@ -107,7 +107,7 @@ def main() -> int:
         return 1
 
     print("\n✓ 離線資源已準備完成。")
-    print("下一步執行：python3 tools/local_server.py")
+    print("下一步執行：python3 tools/local_server.py --port 4173")
     return 0
 
 if __name__ == "__main__":
