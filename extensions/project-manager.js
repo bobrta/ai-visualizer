@@ -134,7 +134,7 @@
   const host=document.createElement('section');host.id='projectManager';host.className='project-manager';
   host.innerHTML='<div class="project-head"><div><span class="mode-eyebrow">PROJECT</span><strong id="projectName">Project Manager</strong><small id="projectSummary">尚未選擇專案</small></div><button id="projectCollapse" type="button">收合</button></div><div class="project-controls"><select id="projectSelect" aria-label="選擇專案"></select><button id="newProject" type="button">＋ 新專案</button></div><div class="project-actions"><button id="addCurrentVisual" class="primary" type="button">加入目前圖</button><button id="updateCurrentVisual" type="button">更新目前圖</button><button id="renameProject" type="button">專案改名</button><button id="exportProject" type="button">匯出專案</button><label class="project-import">匯入專案<input id="importProject" type="file" accept=".json,application/json" hidden></label><button id="deleteProject" type="button">刪除專案</button></div><div id="projectItems" class="project-items"></div>';
 
-  $('workflowSidebar')?.prepend(host);
+  const advanced=$('workflowAdvancedBody');if(advanced)advanced.prepend(host);else $('workflowSidebar')?.append(host);
   host.querySelector('#projectCollapse').onclick=()=>{host.classList.toggle('collapsed');host.querySelector('#projectCollapse').textContent=host.classList.contains('collapsed')?'展開':'收合';};
   host.querySelector('#newProject').onclick=()=>{const name=prompt('新專案名稱','新專案');if(name?.trim())createProject(name);};
   host.querySelector('#projectSelect').onchange=e=>{if(e.target.value)switchProject(e.target.value);};

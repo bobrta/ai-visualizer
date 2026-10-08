@@ -128,7 +128,7 @@
 
   function setVisible(mode){host.hidden=mode!=='business';}
   window.addEventListener('vc-work-mode-change',e=>setVisible(e.detail?.mode));
-  const advisor=$('chartAdvisor');advisor?.insertAdjacentElement('afterend',host);
+  const advanced=$('workflowAdvancedBody');if(advanced)advanced.append(host);else{const advisor=$('chartAdvisor');advisor?.insertAdjacentElement('afterend',host);}
   select.value=current;render();
   setVisible(window.VCTemplateLibrary?.getMode?.()||'business');
   window.VCPresentationStory={stories:STORIES,getCurrent:()=>current};

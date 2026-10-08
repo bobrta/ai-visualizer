@@ -81,5 +81,5 @@
   }
   function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
   host.querySelector('#advisorReset').onclick=()=>{goalsHost.querySelectorAll('button').forEach(b=>b.classList.remove('active'));$('advisorResult').innerHTML='<span>選一個目的，我會縮成 3–5 個適合的圖。</span>';window.VCTemplateLibrary?.showRecommended?.();};
-  const modePanel=$('workModePanel');modePanel?.insertAdjacentElement('afterend',host);
+  const advanced=$('workflowAdvancedBody');if(advanced)advanced.append(host);else{const modePanel=$('workModePanel');modePanel?.insertAdjacentElement('afterend',host);}
 })();

@@ -27,8 +27,7 @@ async function screenshot(locator,file){
   await locator.screenshot({path:path.join(OUT,file),animations:'disabled'});
 }
 async function mainChart(page,type,file){
-  await page.selectOption('#chartType',type);
-  await page.click('#sample');
+  await page.evaluate(t=>window.VCApplyTemplate?.(t),type);
   await page.click('#generate');
   await page.waitForTimeout(1200);
   const diagnostic=await page.evaluate(()=>({
@@ -279,11 +278,24 @@ try{
   await main.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
   await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
   assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
+  await main.waitForSelector('#quickChartSelect',{state:'visible',timeout:5000});
+  await main.selectOption('#quickChartCategory','data');
+  await main.selectOption('#quickChartSelect','bar');
+  await main.waitForFunction(()=>document.querySelector('#chartType')?.value==='bar'&&document.querySelector('#fields')?.textContent?.includes('圖形標題'),null,{timeout:5000});
+  const switcher=await main.evaluate(()=>({
+    quick:document.querySelector('#quickChartSelect')?.value,
+    hiddenLegacy:getComputedStyle(document.querySelector('#chartType')).display==='none',
+    advancedOpen:document.querySelector('#workflowAdvanced')?.open===true,
+    status:document.querySelector('#status')?.textContent||''
+  }));
+  assert(switcher.quick==='bar','main: quick chart switcher did not select bar');
+  assert(switcher.hiddenLegacy,'main: legacy chart dropdown should be hidden from visible workflow');
+  assert(!switcher.advancedOpen,'main: advanced tools should start collapsed');
+  assert(switcher.status.includes('已切換到'),'main: chart switch status missing');
   await assertNoBodyOverflow(main,'main',8);
   await mainChart(main,'parallel','main-parallel.png');
   await mainChart(main,'scatter3d','main-scatter3d.png');
-  await main.selectOption('#chartType','bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -328,8 +340,7 @@ try{
   assert(autoBarLayout.status.includes('左 KPI + 右主圖'),'bar: resolved layout missing from status');
   await screenshot(main.locator('#plot'),'main-executive-left-kpi.png');
 
-  await main.selectOption('#chartType','line');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'line');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -343,8 +354,7 @@ try{
   assert(autoTrend.status.includes('大數字 + 趨勢圖'),'line: trend-focus layout missing from status');
   await screenshot(main.locator('#plot'),'main-executive-trend-focus.png');
 
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -365,7 +375,7 @@ try{
     report:{source:'企業內部 ERP、CRM、營運週報與各區域彙整資料；'.repeat(12)},
     series:Array.from({length:9},(_,i)=>({name:'區域系列 '+(i+1),x:['Q1','Q2','Q3','Q4'],y:[10+i,18+i*2,15+i,22+i*2]}))
   };
-  await main.selectOption('#chartType','grouped_bar');
+  await main.evaluate(()=>window.VCApplyTemplate?.('grouped_bar'));
   await main.click('#codeMode');
   await main.fill('#input',JSON.stringify(stressData,null,2));
   await main.click('#generate');
@@ -450,8 +460,7 @@ try{
   assert(await main.evaluate(()=>document.querySelector('#executiveQualityPanel')?.hidden===false),'executive: quality panel did not restore');
   assert(executiveBack.selected==='auto','executive layout should remain Auto after mode toggle');
   assert(executiveBack.xdomain&&executiveBack.xdomain[1]<=.64,'grouped_bar should restore split-compare domain after toggle');
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -464,8 +473,7 @@ try{
   assert(emphasisUI.status.includes('主次層級'),'grouped_bar: hierarchy count missing from status');
   assert(new Set(emphasisUI.opacities).size>=2,'grouped_bar: series hierarchy not visible in Plotly data');
   await screenshot(main.locator('#plot'),'main-emphasis-grouped-bar.png');
-  await main.selectOption('#chartType','line');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'line');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -482,8 +490,7 @@ try{
   assert(legendUI.marginRight>=105,'line: no right margin for direct labels');
   await screenshot(main.locator('#plot'),'main-line-direct-labels.png');
   await main.evaluate(()=>VCStyle.set({theme:'mono'}));
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
