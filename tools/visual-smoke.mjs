@@ -105,22 +105,28 @@ async function researchDiagram(context,id,engine,file){
       bad:svg?/NaN|Infinity|undefined/.test(svg.outerHTML):true,
       texts,
       nodes:rects('[data-node="1"]'),
-      edgeLabels:rects('[data-edge-label-box="1"]')
+      edgeLabels:rects('[data-edge-label-box="1"]'),
+      routeFallbacks:Number(svg?.dataset.routeFallbacks||0),
+      fitScale:Number(svg?.dataset.fitScale||1),
+      treeSourceYs:[...(svg?.querySelectorAll?.('[data-tree-edge="1"]')||[])].map(n=>Number(n.dataset.sourceY)).filter(Number.isFinite)
     };
   });
   assert(m.engine===engine,`${id}: expected ${engine}, got ${m.engine||'none'}`);
   assert(m.layoutEngine,`${id}: Research Figure Layout engine missing`);
   if(id==='why'){
     assert(m.stage.h>=390&&m.stage.h<=500,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.treeP1&&m.layoutVersion==='p2',`${id}: Why P2 layout override missing`);
+    assert(m.treeP1&&m.layoutVersion==='p3',`${id}: Why P3 layout override missing`);
     assert(m.treeLevelGap>=120&&m.treeSiblingGap>=30,`${id}: adaptive tree gaps missing ${m.treeLevelGap}/${m.treeSiblingGap}`);
+    assert(new Set(m.treeSourceYs.map(y=>Math.round(y))).size>=2,`${id}: child edges are not fanned out from the parent`);
   }
   if(id==='concept'){
     assert(m.stage.h>=500&&m.stage.h<=650,`${id}: unexpected adaptive height ${m.stage.h}`);
-    assert(m.networkP1&&m.layoutVersion==='p2',`${id}: Concept P2 layout override missing`);
+    assert(m.networkP1&&m.layoutVersion==='p3',`${id}: Concept P3 layout override missing`);
     const overlaps=(arr,gap=1)=>{let n=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){const a=arr[i],b=arr[j];if(a.left<b.right-gap&&a.right>b.left+gap&&a.top<b.bottom-gap&&a.bottom>b.top+gap)n++;}return n;};
     assert(overlaps(m.nodes,2)===0,`${id}: rendered nodes overlap`);
     assert(overlaps(m.edgeLabels,1)===0,`${id}: rendered relation labels overlap`);
+    assert(m.fitScale>0&&m.fitScale<=1,`${id}: invalid P3 fit scale ${m.fitScale}`);
+    assert(m.routeFallbacks>=0,`${id}: route fallback count missing`);
   }
   assert(m.stage?.w>300&&m.stage?.h>200,`${id}: invalid preview size`);
   assert(m.svg?.w>300&&m.svg?.h>200,`${id}: missing/undersized SVG`);
@@ -182,7 +188,7 @@ async function researchDenseDiagram(context,id,file){
       bad:/NaN|Infinity|undefined/.test(svg?.outerHTML||'')
     };
   },id);
-  assert(m.layoutVersion==='p2',`dense ${id}: P2 layout not active`);
+  assert(m.layoutVersion==='p3',`dense ${id}: P3 layout not active`);
   assert(!m.bad,`dense ${id}: invalid SVG numeric output`);
   assert(m.nodeOverlap===0,`dense ${id}: ${m.nodeOverlap} node collisions`);
   if(id==='concept'){
