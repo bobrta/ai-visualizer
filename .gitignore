@@ -1,2 +1,5 @@
 node_modules/
 artifacts/visual/
+
+# Downloaded by tools/offline_setup.py; keep large third-party bundles out of Git.
+assets/vendor/
