@@ -561,9 +561,9 @@ try{
   const handbook=await context.newPage(),handbookCheck=await attachDiagnostics(handbook,'handbook');
   await handbook.goto(BASE+'/guides/chart-handbook/index.html',{waitUntil:'domcontentloaded'});
   await handbook.waitForFunction(()=>document.querySelector('#count')?.textContent.includes('100 / 100'),null,{timeout:10000});
-  const handbookAppearance=await handbook.evaluate(()=>({colors:document.querySelectorAll('#handbookAppearance .color-chip').length,fonts:document.querySelectorAll('#handbookAppearance .font-select option').length}));
-  assert(handbookAppearance.colors===20,'handbook: expected restored 20-color appearance control');
+  const handbookAppearance=await handbook.evaluate(()=>({fonts:document.querySelectorAll('#guideFont option').length,nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim())}));
   assert(handbookAppearance.fonts===5,'handbook: expected five font choices');
+  assert(handbookAppearance.nav.includes('工作台')&&handbookAppearance.nav.includes('圖表指南')&&handbookAppearance.nav.includes('研究工作室'),'handbook: three-way navigation missing');
   await assertNoBodyOverflow(handbook,'handbook',8);
   await screenshot(handbook.locator('main'),'handbook.png');
   handbookCheck();
