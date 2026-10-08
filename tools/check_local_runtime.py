@@ -51,7 +51,7 @@ def main() -> int:
         for path in EXPECTED:
             url = f"http://127.0.0.1:{port}{path}"
             with urllib.request.urlopen(url, timeout=10) as response:
-                body = response.read(256)
+                body = response.read()
                 if response.status != 200:
                     raise RuntimeError(f"{path}: HTTP {response.status}")
                 if not body:
