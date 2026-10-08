@@ -375,7 +375,7 @@ try{
     report:{source:'企業內部 ERP、CRM、營運週報與各區域彙整資料；'.repeat(12)},
     series:Array.from({length:9},(_,i)=>({name:'區域系列 '+(i+1),x:['Q1','Q2','Q3','Q4'],y:[10+i,18+i*2,15+i,22+i*2]}))
   };
-  await main.selectOption('#chartType','grouped_bar');
+  await main.evaluate(()=>window.VCApplyTemplate?.('grouped_bar'));
   await main.click('#codeMode');
   await main.fill('#input',JSON.stringify(stressData,null,2));
   await main.click('#generate');
