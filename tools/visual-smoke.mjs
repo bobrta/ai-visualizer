@@ -547,7 +547,9 @@ try{
   const handbook=await context.newPage(),handbookCheck=await attachDiagnostics(handbook,'handbook');
   await handbook.goto(BASE+'/guides/chart-handbook/index.html',{waitUntil:'domcontentloaded'});
   await handbook.waitForFunction(()=>document.querySelector('#count')?.textContent.includes('100 / 100'),null,{timeout:10000});
-  assert(await handbook.getByText('進階色庫 · 40 色').count()===1,'handbook: 40-color appearance control missing');
+  const handbookAppearance=await handbook.evaluate(()=>({colors:document.querySelectorAll('#handbookAppearance .color-chip').length,fonts:document.querySelectorAll('#handbookAppearance .font-select option').length}));
+  assert(handbookAppearance.colors===20,'handbook: expected restored 20-color appearance control');
+  assert(handbookAppearance.fonts===5,'handbook: expected five font choices');
   await assertNoBodyOverflow(handbook,'handbook',8);
   await screenshot(handbook.locator('main'),'handbook.png');
   handbookCheck();
