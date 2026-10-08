@@ -81,12 +81,22 @@ async function researchDiagram(context,id,engine,file){
   const page=await context.newPage(),check=await attachDiagnostics(page,'research:'+id);
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
+  if(id==='why'){
+    const fontOptions=await page.locator('#appearance .font-select option').count();
+    assert(fontOptions===5,'research: expected five font choices');
+    await page.selectOption('#appearance .font-select','ming');
+  }
   await page.click('#render');
   await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
   const researchStatus=await page.locator('#status').textContent();
   const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length,nav:[...document.querySelectorAll('header .studio-nav a')].map(a=>a.textContent.trim())}));
   console.log('RESEARCH-DIAG',id,JSON.stringify(researchDiag));
   assert(researchDiag.nav.includes('工作台')&&researchDiag.nav.includes('圖表指南')&&researchDiag.nav.includes('研究工作室'),id+': three-way navigation missing');
+  if(id==='why'){
+    const fontApplied=await page.evaluate(()=>({state:window.VCStyle?.state?.().font||'',paper:getComputedStyle(document.querySelector('#paper')).fontFamily}));
+    assert(fontApplied.state==='ming','research: font selector did not update shared style state');
+    assert(/PMingLiU|MingLiU|Songti/i.test(fontApplied.paper),'research: selected font did not reach project output');
+  }
   if(!researchStatus?.includes('已完成')){await page.screenshot({path:path.join(OUT,`debug-research-${id}.png`),fullPage:true,animations:'disabled'});throw new Error(`${id}: Research Studio render failed: ${researchStatus}`);}
   const m=await page.evaluate(()=>{
     const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),sr=svg?.getBoundingClientRect();
