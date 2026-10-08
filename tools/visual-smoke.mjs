@@ -27,8 +27,7 @@ async function screenshot(locator,file){
   await locator.screenshot({path:path.join(OUT,file),animations:'disabled'});
 }
 async function mainChart(page,type,file){
-  await page.selectOption('#chartType',type);
-  await page.click('#sample');
+  await page.evaluate(t=>window.VCApplyTemplate?.(t),type);
   await page.click('#generate');
   await page.waitForTimeout(1200);
   const diagnostic=await page.evaluate(()=>({
@@ -296,8 +295,7 @@ try{
   await assertNoBodyOverflow(main,'main',8);
   await mainChart(main,'parallel','main-parallel.png');
   await mainChart(main,'scatter3d','main-scatter3d.png');
-  await main.selectOption('#chartType','bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -342,8 +340,7 @@ try{
   assert(autoBarLayout.status.includes('左 KPI + 右主圖'),'bar: resolved layout missing from status');
   await screenshot(main.locator('#plot'),'main-executive-left-kpi.png');
 
-  await main.selectOption('#chartType','line');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'line');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -357,8 +354,7 @@ try{
   assert(autoTrend.status.includes('大數字 + 趨勢圖'),'line: trend-focus layout missing from status');
   await screenshot(main.locator('#plot'),'main-executive-trend-focus.png');
 
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -464,8 +460,7 @@ try{
   assert(await main.evaluate(()=>document.querySelector('#executiveQualityPanel')?.hidden===false),'executive: quality panel did not restore');
   assert(executiveBack.selected==='auto','executive layout should remain Auto after mode toggle');
   assert(executiveBack.xdomain&&executiveBack.xdomain[1]<=.64,'grouped_bar should restore split-compare domain after toggle');
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -478,8 +473,7 @@ try{
   assert(emphasisUI.status.includes('主次層級'),'grouped_bar: hierarchy count missing from status');
   assert(new Set(emphasisUI.opacities).size>=2,'grouped_bar: series hierarchy not visible in Plotly data');
   await screenshot(main.locator('#plot'),'main-emphasis-grouped-bar.png');
-  await main.selectOption('#chartType','line');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'line');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
@@ -496,8 +490,7 @@ try{
   assert(legendUI.marginRight>=105,'line: no right margin for direct labels');
   await screenshot(main.locator('#plot'),'main-line-direct-labels.png');
   await main.evaluate(()=>VCStyle.set({theme:'mono'}));
-  await main.selectOption('#chartType','grouped_bar');
-  await main.click('#sample');
+  await main.evaluate(t=>window.VCApplyTemplate?.(t),'grouped_bar');
   await main.click('#generate');
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
