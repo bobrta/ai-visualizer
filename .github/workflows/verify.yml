@@ -37,13 +37,6 @@ jobs:
             extensions/diagram-network-p1.js
             extensions/diagram-tree-p1.js
             extensions/template-library.js
-            extensions/sidebar-workflow.js
-            extensions/work-mode.js
-            extensions/output-format.js
-            extensions/chart-advisor.js
-            extensions/presentation-story.js
-            extensions/research-workspace.js
-            extensions/project-manager.js
             extensions/pdf-export.js
             extensions/appearance.js
             extensions/professional.js

@@ -6,8 +6,7 @@ function assert(ok,msg){if(!ok){console.error('SECURITY CHECK FAILED:',msg);proc
 
 const firstParty=[
   'index.html','builder.js','charts.js','gate.js',
-  'extensions/project-manager.js','extensions/editor-state.js',
-  'extensions/research-studio/studio.js'
+  'extensions/editor-state.js','extensions/research-studio/studio.js'
 ];
 for(const file of firstParty){
   const s=read(file);
@@ -34,7 +33,7 @@ for(const version of ['plotly-4.1.1.min.js','echarts-5.6.0.min.js','mermaid-11.4
 
 assert(read('index.html').includes("value.length>2e6"),'main JSON size limit missing');
 assert(read('extensions/research-studio/studio.js').includes("value.length>1e6"),'research JSON size limit missing');
-const projects=read('extensions/project-manager.js');
+const projects=read('legacy/ui-experiments/project-manager.js');
 assert(projects.includes('MAX_IMPORT_BYTES=2*1024*1024'),'project import byte limit missing');
 assert(projects.includes('MAX_PROJECT_ITEMS=500'),'project item limit missing');
 

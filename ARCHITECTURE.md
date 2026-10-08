@@ -79,18 +79,11 @@ The three interfaces should not directly manipulate each other's DOM. Cross-inte
 
 ## Dormant / legacy modules
 
-The following files are currently not loaded by any of the three entry points. They are preserved temporarily because they contain earlier experiments or features that may be reused, but new code must not depend on them without explicitly wiring them into an interface:
+Earlier UI experiments are isolated under `legacy/ui-experiments/` and are not loaded by any current entry point. The archive contains the former sidebar workflow, work modes, output-format panel, chart advisor, presentation storyline, research workspace, project manager, and Executive Summary v1.
 
-- `extensions/sidebar-workflow.js`
-- `extensions/work-mode.js`
-- `extensions/output-format.js`
-- `extensions/chart-advisor.js`
-- `extensions/presentation-story.js`
-- `extensions/research-workspace.js`
-- `extensions/project-manager.js`
-- `extensions/executive-summary.js` (superseded by `executive-summary-v2.js`)
+Production pages must not import from `legacy/`. If one of those ideas is revived, move the needed logic back into an active module, document its ownership here, and add regression coverage before wiring it into an interface.
 
-Dormant UI CSS left by those experiments has been removed from the main page so it no longer increases the active workbench stylesheet.
+Dormant UI CSS from those experiments has also been removed from the main page, so archived features no longer increase the active Workbench payload.
 
 ## Change rules
 
