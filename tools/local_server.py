@@ -28,10 +28,30 @@ REQUIRED = [
 ]
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    CSP = (
+        "default-src 'self' data: blob:; "
+        "script-src 'self' 'unsafe-inline' https://cdn.plot.ly https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; "
+        "font-src 'self' data:; "
+        "connect-src 'self'; "
+        "worker-src 'self' blob:; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'"
+    )
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Content-Security-Policy", self.CSP)
+        self.send_header(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        )
         super().end_headers()
 
     def log_message(self, fmt, *args):
@@ -76,6 +96,10 @@ def main() -> int:
     print("Visual Canvas 本機模式")
     print("資料只由這台電腦上的瀏覽器與 localhost 處理。")
     print(f"網址：{url}")
+    if port != 4173:
+        print("⚠ 4173 已被占用，這次使用其他連接埠。")
+        print("  瀏覽器 localStorage 會依網址與連接埠分開；原本專案不會消失，")
+        print("  只是仍保存在原本的 http://127.0.0.1:4173。")
     print("按 Control+C 結束。\n")
 
     if not args.no_browser:
