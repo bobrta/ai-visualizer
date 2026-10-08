@@ -297,6 +297,18 @@ try{
   assert(workbenchUI.status.includes('已切換到'),'main: chart switch status missing');
   assert(workbenchUI.fontCount===5&&workbenchUI.fontOptions===5,'main: expected five font choices');
   assert(workbenchUI.nav.includes('工作台')&&workbenchUI.nav.includes('圖表指南')&&workbenchUI.nav.includes('研究工作室'),'main: three-way navigation missing');
+  await main.selectOption('#appearance .font-select','ming');
+  await main.evaluate(()=>window.VCApplyTemplate?.('bar'));
+  await main.click('#generate');
+  await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
+  const fontUI=await main.evaluate(()=>({
+    selected:document.querySelector('#appearance .font-select')?.value||'',
+    state:window.VCStyle?.state?.().font||'',
+    family:document.querySelector('#plot')?.layout?.font?.family||''
+  }));
+  assert(fontUI.selected==='ming'&&fontUI.state==='ming','main: font selector did not update shared style state');
+  assert(/PMingLiU|MingLiU|Songti/i.test(fontUI.family),'main: selected report font did not reach Plotly output');
+  await main.selectOption('#appearance .font-select','modern');
   await assertNoBodyOverflow(main,'main',8);
 
   const guide=await context.newPage(),guideCheck=await attachDiagnostics(guide,'chart-guide');
