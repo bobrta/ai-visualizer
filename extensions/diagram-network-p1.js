@@ -29,7 +29,7 @@ function spreadNetwork(data,{centerId=null,maxNodeWidth=220}={}){
  nodes=E.avoidCollisions(nodes,{gap:nodeGap,iterations:160,axis:'both'});
  const h2=nodes.find(n=>n.id===hub);nodes=nodes.map(n=>({...n,x:n.x-h2.x,y:n.y-h2.y}));
  let b=E.bounds(nodes,58),sx=58-b.x,sy=58-b.y;nodes=nodes.map(n=>({...n,x:n.x+sx,y:n.y+sy}));b=E.bounds(nodes,58);
- return {...ir,nodes,meta:{...ir.meta,hub,ringGap:baseRingGap,ringRadii,nodeGap,hubSafeRadius:hubSafe,maxNodeWidth:adaptiveWidth,layoutVersion:'p2'},bounds:b};
+ return {...ir,nodes,meta:{...ir.meta,hub,ringGap:baseRingGap,ringRadii,nodeGap,hubSafeRadius:hubSafe,maxNodeWidth:adaptiveWidth,layoutVersion:'p3'},bounds:b};
 }
 function placeLabel(route,label,nodes,occupied,{fontSize=11,maxWidth=155}={}){
  const m=E.wrapText(label,{fontSize,maxWidth,maxLines:2}),base=route.labelPoint,dx=route.t.x-route.s.x,dy=route.t.y-route.s.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
@@ -39,10 +39,10 @@ function placeLabel(route,label,nodes,occupied,{fontSize=11,maxWidth=155}={}){
  for(const p of candidates){const box={x:p.x,y:p.y,width:m.width+20,height:m.height+14};let s=Math.hypot(p.x-base.x,p.y-base.y);for(const n of nodes)if(E.rectOverlap(box,n,10))s+=2400;for(const o of occupied)if(E.rectOverlap(box,o,8))s+=3200;if(s<score){score=s;best={...p,box,measure:m,score:s};}}
  return best;
 }
-function routeEdge(source,target,polarity=1,{bendScale=1}={}){
+function routeEdge(source,target,polarity=1,{bendScale=1,bend=null}={}){
  const dx=target.x-source.x,dy=target.y-source.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
- const sx=source.x+ux*source.width*.48,sy=source.y+uy*source.height*.42,tx=target.x-ux*target.width*.48,ty=target.y-uy*target.height*.42,nx=-uy,ny=ux,bend=polarity*clamp(len*.18*bendScale,24,108),cx=(sx+tx)/2+nx*bend,cy=(sy+ty)/2+ny*bend;
- return {d:`M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`,s:{x:sx,y:sy},t:{x:tx,y:ty},control:{x:cx,y:cy},labelPoint:{x:(sx+2*cx+tx)/4,y:(sy+2*cy+ty)/4},polarity,bendScale};
+ const sx=source.x+ux*source.width*.48,sy=source.y+uy*source.height*.42,tx=target.x-ux*target.width*.48,ty=target.y-uy*target.height*.42,nx=-uy,ny=ux,bendMag=bend==null?clamp(len*.18*bendScale,24,160):Math.abs(bend),bendValue=polarity*bendMag,cx=(sx+tx)/2+nx*bendValue,cy=(sy+ty)/2+ny*bendValue;
+ return {d:`M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`,s:{x:sx,y:sy},t:{x:tx,y:ty},control:{x:cx,y:cy},labelPoint:{x:(sx+2*cx+tx)/4,y:(sy+2*cy+ty)/4},polarity,bendScale,bend:bendMag};
 }
 function quadPoint(route,t){const u=1-t;return{x:u*u*route.s.x+2*u*t*route.control.x+t*t*route.t.x,y:u*u*route.s.y+2*u*t*route.control.y+t*t*route.t.y};}
 function routePenalty(route,nodes,source,target,hub,hubSafe){
@@ -59,12 +59,19 @@ function routePenalty(route,nodes,source,target,hub,hubSafe){
 }
 function chooseRoute(source,target,nodes,hub,hubSafe,edgeIndex=0){
  const base=edgeIndex%2?-1:1,candidates=[];
- for(const scale of [1,.72,1.35])for(const sign of [base,-base])candidates.push(routeEdge(source,target,sign,{bendScale:scale}));
+ for(const scale of [1,.72,1.35,1.8])for(const sign of [base,-base])candidates.push(routeEdge(source,target,sign,{bendScale:scale}));
+ if(hub&&source.id!==hub.id&&target.id!==hub.id){
+   const mx=(source.x+target.x)/2,my=(source.y+target.y)/2,midDist=Math.hypot(mx-hub.x,(my-hub.y)/.84);
+   if(midDist<hubSafe+60){
+     const detour=Math.min(480,Math.max(180,2*(hubSafe+54)));
+     candidates.push(routeEdge(source,target,1,{bend:detour}),routeEdge(source,target,-1,{bend:detour}));
+   }
+ }
  let best=candidates[0],bestScore=Infinity;
  for(const r of candidates){
    let s=routePenalty(r,nodes,source,target,hub,hubSafe);
    if(hub&&source.id!==hub.id&&target.id!==hub.id){
-     const c1=routeEdge(source,target,1,{bendScale:r.bendScale}),c2=routeEdge(source,target,-1,{bendScale:r.bendScale});
+     const c1=routeEdge(source,target,1,{bend:r.bend}),c2=routeEdge(source,target,-1,{bend:r.bend});
      const d1=Math.hypot(c1.control.x-hub.x,(c1.control.y-hub.y)/.84),d2=Math.hypot(c2.control.x-hub.x,(c2.control.y-hub.y)/.84);
      const outward=d1>=d2?1:-1;if(r.polarity!==outward)s+=420;
    }
