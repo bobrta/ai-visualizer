@@ -323,6 +323,22 @@ try{
   assert(fontUI.selected==='ming'&&fontUI.state==='ming','main: font selector did not update shared style state');
   assert(/PMingLiU|MingLiU|Songti/i.test(fontUI.family),'main: selected report font did not reach Plotly output');
   await main.selectOption('#appearance .font-select','modern');
+  await main.evaluate(()=>window.VCApplyTemplate?.('swot_analysis'));
+  const exportQuality=await main.evaluate(()=>{
+    const p={id:'slide_16_9',width:1920,height:1080,safe:.055,pdf:'slide_16_9'};
+    const cfg=exportPlotConfig(p),table=cfg.traces.find(t=>t.type==='table');
+    return {
+      width:cfg.layout.width,height:cfg.layout.height,
+      headerSize:table?.header?.font?.size||0,
+      cellSize:table?.cells?.font?.size||0,
+      cellHeight:table?.cells?.height||0,
+      domain:table?.domain?.y||[]
+    };
+  });
+  assert(exportQuality.width===1920&&exportQuality.height===1080,'main: export layout must target slide dimensions');
+  assert(exportQuality.headerSize>=22&&exportQuality.cellSize>=20,'main: SWOT export typography is too small');
+  assert(exportQuality.cellHeight>=80,'main: SWOT export rows are too compressed');
+  assert(exportQuality.domain[1]-exportQuality.domain[0]>=.65,'main: SWOT table should occupy the slide body');
   await assertNoBodyOverflow(main,'main',8);
 
   const guide=await context.newPage(),guideCheck=await attachDiagnostics(guide,'chart-guide');
