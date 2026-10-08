@@ -16,7 +16,7 @@ Visual Canvas 現在採 **local-first**：程式與資料主要在自己的電�
    這會把固定版本的 Plotly 4.1.1、ECharts 5.6.0、Mermaid 11.4.1 下載到 `assets/vendor/`。只需要做一次。
 3. 之後執行：
 
-   `python3 tools/local_server.py`
+   `python3 tools/local_server.py --port 4173`
 
    程式只綁定 `127.0.0.1`，會自動打開瀏覽器。完成首次初始化後，即使沒有網路也可以使用主工作台與 Research Studio。
 4. macOS 也提供 `setup-offline.command` 與 `start-local.command` 作為快捷入口；若 Finder 阻擋執行，可先用上面的 Python 指令。
@@ -51,7 +51,7 @@ Visual Canvas 現在採 **local-first**：程式與資料主要在自己的電�
 - 執行時會先嘗試 `assets/vendor/` 的固定版本；若本機檔缺少且電腦有網路，才回退到固定版本 CDN。要完全離線，請先執行一次 `setup-offline.command` / `setup-offline.bat`。
 - 本程式不呼叫 AI API，不會主動把圖表輸入送到遠端伺服器。
 - 草稿、專案、工作模式等資料會保存在瀏覽器 localStorage；清除瀏覽器網站資料會一併清除，所以重要專案要匯出 JSON 備份。
-- localStorage 依完整網址（含連接埠）分開保存。建議固定使用 `http://127.0.0.1:4173`；若 4173 被占用而改用其他連接埠，原資料仍留在原網址，並不是被刪除。
+- localStorage 依完整網址（含連接埠）分開保存。日常啟動檔固定使用 `http://127.0.0.1:4173`；若該埠被占用，請先關閉舊的本機伺服器。若手動不指定 `--port` 而改到其他連接埠，原資料仍留在原網址，並不是被刪除。
 - `tools/local_server.py` 只監聽 `127.0.0.1`，不會把本機網站開放到區域網路。
 - 每次輸入最多 2 MB；心智圖 15 層、500 節點；3D 長條最多 200 根。
 - 頁面檢查資料形狀、有限數值、長度與必要條件；不保證資料真實，也不替代統計判讀。
