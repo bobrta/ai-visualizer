@@ -18,9 +18,11 @@ const themes={
  mono:{name:'Monochrome｜黑白列印',desc:'灰階層級清楚，適合正式文件與列印。',background:'white',color:'#3F4852',palette:['#27313A','#59636D','#7D8790','#A3ABB2','#C4C9CD','#E1E4E7'],fg:'#20262C',muted:'#6E7780',grid:'#E5E7E9',surface:'#FFFFFF',accent:'#3F4852',positive:'#4E6354',negative:'#775454',warning:'#78684B'}
 };
 const fontPresets={
- modern:{name:'現代無襯線',body:'-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif',title:'-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif'},
+ modern:{name:'現代黑體',body:'-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif',title:'-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif'},
  jhenghei:{name:'微軟正黑體',body:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif',title:'"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif'},
- song:{name:'宋體（明體）',body:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif',title:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif'}
+ ming:{name:'新細明體',body:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif',title:'"PMingLiU", "MingLiU", "Noto Serif TC", "Songti TC", serif'},
+ song:{name:'宋體',body:'"Songti TC", "SimSun", "Noto Serif TC", "PMingLiU", serif',title:'"Songti TC", "SimSun", "Noto Serif TC", "PMingLiU", serif'},
+ doll:{name:'娃娃體',body:'"Hannotate TC", "Yuanti TC", "DFKai-SB", "Microsoft JhengHei", "PingFang TC", sans-serif',title:'"Hannotate TC", "Yuanti TC", "DFKai-SB", "Microsoft JhengHei", "PingFang TC", sans-serif'}
 };
 const STORE='visual-canvas-style-v1';
 let theme='executive',color=themes.executive.color,background=themes.executive.background,custom=false,font='modern';
