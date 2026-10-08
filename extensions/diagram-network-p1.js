@@ -107,7 +107,7 @@ function render(data,width,height,style,{centerId=null,directed=true,maxNodeWidt
  const roleOf=e=>e.kind==='cause'?'cause':(e.source===L.meta.hub||e.target===L.meta.hub)?'spoke':'cross',priority={cause:0,spoke:1,cross:2},occupied=[];
  for(const p of [...plans].sort((a,b)=>priority[roleOf(a.edge)]-priority[roleOf(b.edge)]||a.index-b.index)){if(p.edge.label){p.label=placeLabel(p.route,p.edge.label,L.nodes,occupied);if(p.label)occupied.push(p.label.box);}}
  const fit=E.fitBounds(contentBounds(L,plans,18),width,height,36),g=make('g',{transform:`translate(${fit.tx} ${fit.ty}) scale(${fit.scale})`});svg.append(g);
- const palette=window.VCStyle?.palette?.()||['#1F4E79'],degrees=E.degreeMap(L),dense=L.nodes.length>=18,renderPlans=[...plans].sort((a,b)=>priority[roleOf(b.edge)]-priority[roleOf(a.edge)]||a.index-b.index);
+ const palette=window.VCStyle?.palette?.()||['#1F4E79'],degrees=E.degreeMap(L),dense=L.nodes.length>=16,renderPlans=[...plans].sort((a,b)=>priority[roleOf(b.edge)]-priority[roleOf(a.edge)]||a.index-b.index);
  renderPlans.forEach(({edge:e,route,label})=>{
    const spoke=e.source===L.meta.hub||e.target===L.meta.hub,cause=e.kind==='cause',role=cause?'cause':spoke?'spoke':'cross',stroke=cause?style.accent:spoke?style.muted:style.grid,width=cause?2.7:spoke?2.15:dense?1.1:1.35,opacity=cause?.86:spoke?.72:dense?.32:.44;
    g.append(make('path',{d:route.d,fill:'none',stroke,'stroke-width':width,'stroke-opacity':opacity,'stroke-linecap':'round','marker-end':e.directed!==false&&directed?'url(#vcNetworkArrowP1)':'','data-edge-role':role,'data-route-mode':route.mode,'data-route-score':Math.round(route.score||0)}));
