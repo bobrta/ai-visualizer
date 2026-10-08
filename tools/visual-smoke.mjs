@@ -84,8 +84,9 @@ async function researchDiagram(context,id,engine,file){
   await page.click('#render');
   await page.waitForFunction(()=>{const s=document.querySelector('#status')?.textContent||'';return s.includes('已完成')||s.includes('無法產生');},null,{timeout:12000});
   const researchStatus=await page.locator('#status').textContent();
-  const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length}));
+  const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length,nav:[...document.querySelectorAll('header .studio-nav a')].map(a=>a.textContent.trim())}));
   console.log('RESEARCH-DIAG',id,JSON.stringify(researchDiag));
+  assert(researchDiag.nav.includes('工作台')&&researchDiag.nav.includes('圖表指南')&&researchDiag.nav.includes('研究工作室'),id+': three-way navigation missing');
   if(!researchStatus?.includes('已完成')){await page.screenshot({path:path.join(OUT,`debug-research-${id}.png`),fullPage:true,animations:'disabled'});throw new Error(`${id}: Research Studio render failed: ${researchStatus}`);}
   const m=await page.evaluate(()=>{
     const stage=document.querySelector('#stage'),svg=stage?.querySelector('svg'),sr=svg?.getBoundingClientRect();
@@ -448,7 +449,6 @@ try{
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
 
-  await main.locator('.workbench-settings').evaluate(el=>{el.open=true;});
   await main.selectOption('#executiveLayoutMode','top_kpi');
   await main.waitForTimeout(900);
   const manualTop=await main.evaluate(()=>({
