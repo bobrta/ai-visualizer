@@ -12,7 +12,7 @@ for(let i=1;i<18;i++)links.push({source:'n0',target:'n'+i,relation:'關係 '+i})
 for(let i=1;i<10;i++)links.push({source:'n'+i,target:'n'+(i+8),relation:'延伸 '+i});
 const L=N.spreadNetwork({nodes,links},{centerId:'n0'});
 assert.equal(L.meta.hub,'n0');
-assert.equal(L.meta.layoutVersion,'p3','third-batch network layout active');
+assert.equal(L.meta.layoutVersion,'p6','three-pass network optimization active');
 assert(L.meta.ringGap>=300,'dense network expands base ring gap');
 assert(L.meta.ringRadii[1]>=L.meta.ringGap,'first ring respects density-aware radius');
 assert(L.meta.nodeGap>=40,'dense network expands node gap');
@@ -58,6 +58,9 @@ const routeHub=N.spreadNetwork({nodes:[
 const routeMap=new Map(routeHub.nodes.map(n=>[n.id,n])),cross=N.chooseRoute(routeMap.get('left'),routeMap.get('right'),routeHub.nodes,routeMap.get('hub'),routeHub.meta.hubSafeRadius,3);
 assert(cross&&cross.control&&Number.isFinite(cross.control.x)&&Number.isFinite(cross.control.y),'obstacle-aware cross-link route returned');
 assert(['clear','fallback'].includes(cross.mode),'route mode is reported');
+const overlapRoute=N.routeEdge(routeMap.get('left'),routeMap.get('right'),1,{bendScale:1});
+const priorPenalty=N.priorRoutePenalty(overlapRoute,[{edge:{source:'left',target:'right'},route:overlapRoute}],routeMap.get('left'),routeMap.get('top'));
+assert(priorPenalty>0,'route-aware planning penalizes near-overlapping prior edges');
 
 const tree={name:'這是一個很長的核心研究問題文字',children:[
  {name:'第一條可能原因與說明',children:[{name:'次層原因 A'},{name:'次層原因 B'}]},
@@ -82,4 +85,4 @@ const rootNode=treeLayout.nodes.find(n=>n.level===0),children=treeLayout.nodes.f
 const fanYs=children.map((n,i)=>T.routeTreeEdge(rootNode,n,{index:i,total:children.length,direction:'LR'}).sourcePoint.y);
 assert(new Set(fanYs.map(x=>Math.round(x))).size>=Math.min(3,children.length),'dense Why branches fan out from distinct source points');
 
-console.log('PASS: P3 weighted 360 network, obstacle-aware routing, relation-label avoidance and adaptive Why fan-out.');
+console.log('PASS: P4/P5/P6 route-aware planning, weighted 360 layout, visual hierarchy and Why fan-out regressions.');
