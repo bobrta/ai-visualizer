@@ -423,6 +423,7 @@ try{
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
 
+  await main.locator('.workbench-settings').evaluate(el=>{el.open=true;});
   await main.selectOption('#executiveLayoutMode','top_kpi');
   await main.waitForTimeout(900);
   const manualTop=await main.evaluate(()=>({
