@@ -324,6 +324,8 @@ try{
   assert(/PMingLiU|MingLiU|Songti/i.test(fontUI.family),'main: selected report font did not reach Plotly output');
   await main.selectOption('#appearance .font-select','modern');
   await main.evaluate(()=>window.VCApplyTemplate?.('swot_analysis'));
+  await main.click('#generate');
+  await main.waitForFunction(()=>document.querySelector('#plot')?.data?.[0]?.type==='table',null,{timeout:8000});
   const exportQuality=await main.evaluate(()=>{
     const p={id:'slide_16_9',width:1920,height:1080,safe:.055,pdf:'slide_16_9'};
     const cfg=exportPlotConfig(p),table=cfg.traces.find(t=>t.type==='table');
