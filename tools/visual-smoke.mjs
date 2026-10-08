@@ -278,20 +278,23 @@ try{
   await main.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
   await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
   assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
-  await main.waitForSelector('#quickChartSelect',{state:'visible',timeout:5000});
-  await main.selectOption('#quickChartCategory','data');
-  await main.selectOption('#quickChartSelect','bar');
+  await main.waitForSelector('#simpleWorkbench',{state:'visible',timeout:5000});
+  await main.click('#workbenchChooseChart');
+  await main.waitForSelector('#library[open]',{state:'visible',timeout:5000});
+  await main.locator('.template-card[data-type="bar"]').click();
   await main.waitForFunction(()=>document.querySelector('#chartType')?.value==='bar'&&document.querySelector('#fields')?.textContent?.includes('圖形標題'),null,{timeout:5000});
   const switcher=await main.evaluate(()=>({
-    quick:document.querySelector('#quickChartSelect')?.value,
+    current:document.querySelector('#workbenchChartName')?.textContent||'',
     hiddenLegacy:getComputedStyle(document.querySelector('#chartType')).display==='none',
-    advancedOpen:document.querySelector('#workflowAdvanced')?.open===true,
-    status:document.querySelector('#status')?.textContent||''
+    hasProjectManager:Boolean(document.querySelector('#projectManager')),
+    status:document.querySelector('#status')?.textContent||'',
+    fontCount:Object.keys(window.VCStyle?.fontPresets||{}).length
   }));
-  assert(switcher.quick==='bar','main: quick chart switcher did not select bar');
+  assert(switcher.current.includes('長條'),'main: workbench chart name did not switch to bar');
   assert(switcher.hiddenLegacy,'main: legacy chart dropdown should be hidden from visible workflow');
-  assert(!switcher.advancedOpen,'main: advanced tools should start collapsed');
+  assert(!switcher.hasProjectManager,'main: project manager must not occupy the simple workbench');
   assert(switcher.status.includes('已切換到'),'main: chart switch status missing');
+  assert(switcher.fontCount===5,'main: expected five report font presets');
   await assertNoBodyOverflow(main,'main',8);
   await mainChart(main,'parallel','main-parallel.png');
   await mainChart(main,'scatter3d','main-scatter3d.png');
@@ -420,6 +423,7 @@ try{
   await main.waitForSelector('#plot .plot-container',{state:'visible',timeout:8000});
   await main.waitForTimeout(500);
 
+  await main.locator('.workbench-settings').evaluate(el=>{el.open=true;});
   await main.selectOption('#executiveLayoutMode','top_kpi');
   await main.waitForTimeout(900);
   const manualTop=await main.evaluate(()=>({
