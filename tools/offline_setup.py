@@ -25,18 +25,21 @@ ASSETS = [
         "url": "https://cdn.plot.ly/plotly-4.1.1.min.js",
         "file": "plotly-4.1.1.min.js",
         "min_bytes": 1_000_000,
+        "sha256_prefix": "3b6e15d45dbb7fca",
     },
     {
         "name": "ECharts 5.6.0",
         "url": "https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js",
         "file": "echarts-5.6.0.min.js",
         "min_bytes": 500_000,
+        "sha256_prefix": "bf4a223524e40b77",
     },
     {
         "name": "Mermaid 11.4.1",
         "url": "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js",
         "file": "mermaid-11.4.1.min.js",
         "min_bytes": 1_000_000,
+        "sha256_prefix": "a43bc1afd446f9c4",
     },
 ]
 
@@ -47,11 +50,19 @@ def sha256(path: pathlib.Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+def valid_asset(path: pathlib.Path, asset: dict) -> bool:
+    if not path.exists() or path.stat().st_size < asset["min_bytes"]:
+        return False
+    return sha256(path).startswith(asset["sha256_prefix"])
+
 def download(asset: dict) -> None:
     target = VENDOR / asset["file"]
-    if target.exists() and target.stat().st_size >= asset["min_bytes"]:
-        print(f"✓ {asset['name']} 已存在：{target.name} ({target.stat().st_size/1024/1024:.1f} MB)")
+    if valid_asset(target, asset):
+        print(f"✓ {asset['name']} 已存在且雜湊驗證通過：{target.name} ({target.stat().st_size/1024/1024:.1f} MB)")
         return
+    if target.exists():
+        print(f"↻ {asset['name']} 本機檔案驗證失敗，重新下載。")
+        target.unlink()
 
     print(f"↓ 下載 {asset['name']}…")
     req = urllib.request.Request(
@@ -72,8 +83,13 @@ def download(asset: dict) -> None:
         size = tmp.stat().st_size
         if size < asset["min_bytes"]:
             raise RuntimeError(f"下載檔案過小 ({size} bytes)，可能不是正確的 JavaScript 檔。")
+        digest = sha256(tmp)
+        if not digest.startswith(asset["sha256_prefix"]):
+            raise RuntimeError(
+                f"{asset['name']} SHA-256 驗證失敗：{digest[:16]}…，預期 {asset['sha256_prefix']}…"
+            )
         tmp.replace(target)
-        print(f"✓ {asset['name']} 完成：{size/1024/1024:.1f} MB · SHA256 {sha256(target)[:16]}…")
+        print(f"✓ {asset['name']} 完成：{size/1024/1024:.1f} MB · SHA256 {digest[:16]}…")
     finally:
         if tmp.exists():
             tmp.unlink()
@@ -91,7 +107,7 @@ def main() -> int:
         return 1
 
     print("\n✓ 離線資源已準備完成。")
-    print("下一步執行：python3 tools/local_server.py")
+    print("下一步執行：python3 tools/local_server.py --port 4173")
     return 0
 
 if __name__ == "__main__":

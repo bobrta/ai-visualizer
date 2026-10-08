@@ -28,10 +28,30 @@ REQUIRED = [
 ]
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    CSP = (
+        "default-src 'self' data: blob:; "
+        "script-src 'self' 'unsafe-inline' https://cdn.plot.ly https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; "
+        "font-src 'self' data:; "
+        "connect-src 'self'; "
+        "worker-src 'self' blob:; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'"
+    )
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Content-Security-Policy", self.CSP)
+        self.send_header(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        )
         super().end_headers()
 
     def log_message(self, fmt, *args):
@@ -53,6 +73,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Visual Canvas on localhost.")
     parser.add_argument("--check", action="store_true", help="Validate local runtime assets and exit.")
     parser.add_argument("--no-browser", action="store_true", help="Do not open a browser automatically.")
+    parser.add_argument("--port", type=int, default=None, help="Use a fixed localhost port instead of automatic fallback.")
     args = parser.parse_args()
 
     missing = [p.name for p in REQUIRED if not p.exists()]
@@ -68,14 +89,27 @@ def main() -> int:
         print("✓ Plotly / ECharts / Mermaid 本機資源均存在。")
         return 0
 
-    port = free_port()
+    port = args.port if args.port is not None else free_port()
+    if not 1 <= port <= 65535:
+        print("連接埠需介於 1–65535。")
+        return 2
     url = f"http://127.0.0.1:{port}/"
     handler = functools.partial(Handler, directory=str(ROOT))
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
+    try:
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
+    except OSError as exc:
+        print(f"無法使用連接埠 {port}：{exc}")
+        if args.port is not None:
+            print("請關閉占用該連接埠的程式，或不要指定 --port 讓程式自動選擇。")
+        return 2
 
     print("Visual Canvas 本機模式")
     print("資料只由這台電腦上的瀏覽器與 localhost 處理。")
     print(f"網址：{url}")
+    if port != 4173:
+        print("⚠ 4173 已被占用，這次使用其他連接埠。")
+        print("  瀏覽器 localStorage 會依網址與連接埠分開；原本專案不會消失，")
+        print("  只是仍保存在原本的 http://127.0.0.1:4173。")
     print("按 Control+C 結束。\n")
 
     if not args.no_browser:

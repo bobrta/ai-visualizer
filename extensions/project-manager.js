@@ -5,6 +5,7 @@
   const STORE='visual-canvas-projects-v1', ACTIVE='visual-canvas-active-project-v1';
   const MODE='visual-canvas-work-mode-v1', OUTPUT='visual-canvas-output-format-v1';
   const STORY='visual-canvas-presentation-story-v1', RESEARCH='visual-canvas-research-workspace-v1';
+  const MAX_IMPORT_BYTES=2*1024*1024, MAX_PROJECT_ITEMS=500;
   let db={version:1,projects:{}},active=null;
   const now=()=>new Date().toISOString();
   const uid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
@@ -105,7 +106,19 @@
     const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=p.name.replace(/[\\/:*?"<>|]/g,'-')+'.visual-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
   function importProject(file){
-    const reader=new FileReader();reader.onload=()=>{try{const pack=JSON.parse(reader.result);const p=pack?.project;if(pack?.schema!=='visual-canvas-project'||!p?.name||!Array.isArray(p.items))throw Error('不是有效的 Visual Canvas 專案檔。');const id=uid();db.projects[id]={...p,id,name:String(p.name).slice(0,80),updatedAt:now()};active=id;persist();restoreContext(db.projects[id].context);location.reload();}catch(e){status('匯入失敗：'+e.message);}};reader.readAsText(file);}
+    if(!file)return;
+    if(file.size>MAX_IMPORT_BYTES){status('匯入失敗：專案檔不可超過 2 MB。');return;}
+    const reader=new FileReader();
+    reader.onerror=()=>status('匯入失敗：無法讀取檔案。');
+    reader.onload=()=>{try{
+      const pack=JSON.parse(reader.result),p=pack?.project;
+      if(pack?.schema!=='visual-canvas-project'||pack?.version!==1||!p?.name||!Array.isArray(p.items))throw Error('不是有效的 Visual Canvas 專案檔。');
+      if(p.items.length>MAX_PROJECT_ITEMS)throw Error('專案圖表超過 500 張，請先拆分專案。');
+      if(p.items.some(item=>!item||typeof item!=='object'||!item.data||typeof item.data!=='object'))throw Error('專案內含無效圖表資料。');
+      const id=uid();db.projects[id]={...p,id,name:String(p.name).slice(0,80),updatedAt:now()};active=id;persist();restoreContext(db.projects[id].context);location.reload();
+    }catch(e){status('匯入失敗：'+e.message);}};
+    reader.readAsText(file);
+  }
   function renderSummary(){
     const p=project(),summary=$('projectSummary');if(!summary)return;
     if(!p){summary.textContent='尚未選擇專案';return;}
