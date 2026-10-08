@@ -296,6 +296,28 @@ try{
   assert(switcher.status.includes('已切換到'),'main: chart switch status missing');
   assert(switcher.fontCount===5,'main: expected five report font presets');
   await assertNoBodyOverflow(main,'main',8);
+
+  const guide=await context.newPage(),guideCheck=await attachDiagnostics(guide,'chart-guide');
+  await guide.goto(`${BASE}/guides/chart-handbook/index.html`,{waitUntil:'domcontentloaded'});
+  await guide.waitForSelector('#intentGrid .intent',{state:'visible',timeout:5000});
+  await guide.click('#intentGrid .intent[data-intent="compare"]');
+  await guide.waitForFunction(()=>document.querySelectorAll('#recommendGrid .recommend-card').length>=3,null,{timeout:5000});
+  const guideUI=await guide.evaluate(()=>({
+    intents:document.querySelectorAll('#intentGrid .intent').length,
+    recommend:document.querySelectorAll('#recommendGrid .recommend-card').length,
+    cards:document.querySelectorAll('#charts .chart-card').length,
+    hasWorkbenchLink:[...document.querySelectorAll('#charts .chart-card a')].some(a=>a.href.includes('index.html?template=')),
+    active:document.querySelector('#intentGrid .intent.active')?.dataset.intent||''
+  }));
+  assert(guideUI.intents>=8,'chart-guide: intent selector missing');
+  assert(guideUI.recommend>=3,'chart-guide: recommendations missing');
+  assert(guideUI.cards>=1,'chart-guide: filtered chart cards missing');
+  assert(guideUI.hasWorkbenchLink,'chart-guide: workbench handoff link missing');
+  assert(guideUI.active==='compare','chart-guide: compare intent did not activate');
+  await assertNoBodyOverflow(guide,'chart-guide',8);
+  await screenshot(guide.locator('.page'),'chart-guide.png');
+  guideCheck();
+  await guide.close();
   await mainChart(main,'parallel','main-parallel.png');
   await mainChart(main,'scatter3d','main-scatter3d.png');
   await main.evaluate(t=>window.VCApplyTemplate?.(t),'bar');
