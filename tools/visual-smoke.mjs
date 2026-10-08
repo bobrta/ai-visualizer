@@ -322,7 +322,8 @@ try{
     cards:document.querySelectorAll('#charts .chart-card').length,
     hasWorkbenchLink:[...document.querySelectorAll('#charts .chart-card a')].some(a=>a.href.includes('index.html?template=')),
     active:document.querySelector('#intentGrid .intent.active')?.dataset.intent||'',
-    nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim())
+    nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim()),
+    fontOptions:document.querySelectorAll('#guideFont option').length
   }));
   assert(guideUI.intents>=8,'chart-guide: intent selector missing');
   assert(guideUI.recommend>=3,'chart-guide: recommendations missing');
@@ -330,6 +331,7 @@ try{
   assert(guideUI.hasWorkbenchLink,'chart-guide: workbench handoff link missing');
   assert(guideUI.active==='compare','chart-guide: compare intent did not activate');
   assert(guideUI.nav.includes('工作台')&&guideUI.nav.includes('圖表指南')&&guideUI.nav.includes('研究工作室'),'chart-guide: three-way navigation missing');
+  assert(guideUI.fontOptions===5,'chart-guide: expected five font choices');
   await assertNoBodyOverflow(guide,'chart-guide',8);
   await screenshot(guide.locator('.page'),'chart-guide.png');
   guideCheck();
