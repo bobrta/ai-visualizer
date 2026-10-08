@@ -2,23 +2,35 @@
 
 貼入 JSON 指令 → 按「產生圖形」→ 直接顯示圖形，不需要 AI API 金鑰。
 
-## 線上使用
+## 本機使用（目前推薦方式）
 
-直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site 。網站不需帳號登入，入口採用前端密碼介面。密碼另行提供，不在 README 公開。
+Visual Canvas 現在採 **local-first**：程式與資料主要在自己的電腦執行，不需要 AI API、帳號或雲端資料庫。
 
-點「選擇指令架構」挑選 100 種圖形，切換「點選填寫」或「貼上指令」，再按「產生圖形」。可複製 JSON 與 AI 提示詞。心智圖提供新增主分支、子節點與刪除按鈕。
+### macOS 最簡單流程
 
-## 本機使用
+1. GitHub → Code → Download ZIP，解壓縮整個資料夾。
+2. 第一次有網路時，在終端機進入專案資料夾後執行：
 
-1. Code → Download ZIP，解壓縮。
-2. 用 Safari／Chrome 開啟 index.html，charts.js 必須保留在同一資料夾。
-3. 左側選圖表類型，按「範例」試畫；每種都有可編輯的 JSON。
-4. 或貼入 AI 依指定格式產生的 JSON，按「產生圖形」。指令內的 type 決定真正的圖形類型，選單不會自動轉換舊資料。
-5. 心智圖：拖曳空白畫布、滾輪縮放、分支收合、雙擊修改文字。
-6. 數據圖：使用圖上的工具列縮放、平移、重置、下載 PNG；3D 圖可旋轉視角。
-7. 儲存指令下載 JSON；匯出圖片：心智圖為 SVG，數據图為 PNG。
+   `python3 tools/offline_setup.py`
 
-GitHub 檔案預覽不會執行 HTML；線上版已透過 Sites 發布，非 GitHub Pages。
+   這會把固定版本的 Plotly 4.1.1、ECharts 5.6.0、Mermaid 11.4.1 下載到 `assets/vendor/`。只需要做一次。
+3. 之後執行：
+
+   `python3 tools/local_server.py`
+
+   程式只綁定 `127.0.0.1`，會自動打開瀏覽器。完成首次初始化後，即使沒有網路也可以使用主工作台與 Research Studio。
+4. macOS 也提供 `setup-offline.command` 與 `start-local.command` 作為快捷入口；若 Finder 阻擋執行，可先用上面的 Python 指令。
+5. 不建議直接用 `file://...` 雙擊 `index.html`：ES module、瀏覽器安全限制與本機資源載入在不同瀏覽器下可能不一致。
+
+### 日常操作
+
+- 左側選圖表類型，按「範例」試畫；每種都有可編輯 JSON。
+- 或貼入符合格式的 JSON，再按「產生圖形」。
+- 心智圖支援拖曳、縮放、分支收合與文字編輯。
+- 數據圖支援縮放、平移、PNG；其他視圖可輸出 SVG／PNG／PDF。
+- 專案與草稿會保存在瀏覽器 localStorage；重要內容仍建議定期匯出 Project JSON 備份。
+
+目前專案以本機使用為主，GitHub Pages 部署流程暫停；之後正式公開網站時再重新啟用部署。
 
 ## 原有 30 種類型
 
@@ -28,9 +40,11 @@ GitHub 檔案預覽不會執行 HTML；線上版已透過 Sites 發布，非 Git
 
 ## 執行與資料
 
-- 心智圖離線運作；數據圖按需載入 Plotly 4.1.1，需網路存取 https://cdn.plot.ly/plotly-4.1.1.min.js。3D 需 WebGL。
-- 本程式不呼叫 AI，不將輸入資料送往伺服器。載入 CDN 會對第三方發出下載引擎的網路請求。
-- 資料不自動保存，請在關閉前儲存 JSON。
+- 本機模式優先載入 `assets/vendor/` 中的 Plotly 4.1.1、ECharts 5.6.0、Mermaid 11.4.1；完成首次初始化後不需要 CDN。
+- 若未來部署成一般網站，本機套件不存在時才允許回退到固定版本 CDN；在 `localhost` / `file://` 下不會偷偷改用網路。
+- 本程式不呼叫 AI API，不會主動把圖表輸入送到遠端伺服器。
+- 草稿、專案、工作模式等資料會保存在瀏覽器 localStorage；清除瀏覽器網站資料會一併清除，所以重要專案要匯出 JSON 備份。
+- `tools/local_server.py` 只監聽 `127.0.0.1`，不會把本機網站開放到區域網路。
 - 每次輸入最多 2 MB；心智圖 15 層、500 節點；3D 長條最多 200 根。
 - 頁面檢查資料形狀、有限數值、長度與必要條件；不保證資料真實，也不替代統計判讀。
 - schema/knowledge.schema.json 為舊版心智圖格式，仍支援匯入。新版使用 type/title 與各類型欄位。
@@ -59,7 +73,7 @@ Plotly 官方文件：https://plotly.com/javascript/getting-started/ 與 https:/
 
 ## 研究與報告工作室（獨立擴充）
 
-主頁「研究與報告工作室」或直接開啟 https://visual-canvas.fancy-bear-9592.chatgpt.site/extensions/research-studio/index.html 。沿用原本密碼。
+主頁「研究與報告工作室」或在本機啟動後開啟 `/extensions/research-studio/index.html`。Research Studio 會優先使用本機 ECharts / Mermaid。
 
 獨立資料夾：`extensions/research-studio/`，14 種 ECharts／Mermaid 架構，涵蓋誤差棒、森林、啞鈴、管制、柏拉、知識關係網、階層樹、日曆熱力、流程、循序、甘特、狀態、類別與實體關係圖。原 30 種格式與操作保留。
 
