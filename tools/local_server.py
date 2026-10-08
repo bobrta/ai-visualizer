@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import argparse
 import functools
 import http.server
 import pathlib
@@ -40,6 +41,11 @@ def free_port(preferred: int = 4173) -> int:
         return s.getsockname()[1]
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Run Visual Canvas on localhost.")
+    parser.add_argument("--check", action="store_true", help="Validate local runtime assets and exit.")
+    parser.add_argument("--no-browser", action="store_true", help="Do not open a browser automatically.")
+    args = parser.parse_args()
+
     missing = [p.name for p in REQUIRED if not p.exists()]
     if missing:
         print("缺少離線圖表引擎：")
@@ -47,6 +53,11 @@ def main() -> int:
             print("  - " + name)
         print("\n先執行：python3 tools/offline_setup.py")
         return 2
+
+    if args.check:
+        print("✓ Visual Canvas 本機執行環境完整。")
+        print("✓ Plotly / ECharts / Mermaid 本機資源均存在。")
+        return 0
 
     port = free_port()
     url = f"http://127.0.0.1:{port}/"
@@ -58,7 +69,8 @@ def main() -> int:
     print(f"網址：{url}")
     print("按 Control+C 結束。\n")
 
-    threading.Thread(target=lambda: (time.sleep(0.8), webbrowser.open(url)), daemon=True).start()
+    if not args.no_browser:
+        threading.Thread(target=lambda: (time.sleep(0.8), webbrowser.open(url)), daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
