@@ -40,7 +40,8 @@
     if(openLibrary)$('templates')?.click();
   }
 
+  const advanced=$('workflowAdvancedBody');
   const workflow=$('workflowSidebar');
-  if(workflow)workflow.prepend(host);else document.querySelector('main > aside')?.prepend(host);
+  if(advanced)advanced.append(host);else if(workflow)workflow.append(host);else document.querySelector('main > aside')?.prepend(host);
   setMode(mode,false);
 })();
