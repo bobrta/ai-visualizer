@@ -21,7 +21,7 @@
   let recents=[];
   try{recents=JSON.parse(localStorage.getItem(RECENT_KEY)||'[]').filter(x=>typeof x==='string').slice(0,8);}catch{}
 
-  const categoryFor=i=>ranges.find(x=>Number.isFinite(x.start)&&i>=x.start&&i<=x.end)||ranges[1];
+  const categoryFor=i=>ranges.find(x=>!['all','recent'].includes(x.id)&&Number.isFinite(x.start)&&i>=x.start&&i<=x.end)||ranges[1];
   const cards=[...grid.querySelectorAll('.template-card')];
 
   cards.forEach((card,i)=>{
