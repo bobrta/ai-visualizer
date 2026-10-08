@@ -6,6 +6,8 @@ if ! command -v python3 >/dev/null 2>&1; then
   read -r -p "按 Enter 關閉…"
   exit 1
 fi
-python3 tools/offline_setup.py
-echo
-read -r -p "完成。按 Enter 關閉…"
+python3 tools/offline_setup.py "$@"
+if [ -z "${CI:-}" ]; then
+  echo
+  read -r -p "完成。按 Enter 關閉…"
+fi
