@@ -322,7 +322,8 @@ try{
     cards:document.querySelectorAll('#charts .chart-card').length,
     hasWorkbenchLink:[...document.querySelectorAll('#charts .chart-card a')].some(a=>a.href.includes('index.html?template=')),
     active:document.querySelector('#intentGrid .intent.active')?.dataset.intent||'',
-    nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim())
+    nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim()),
+    fontOptions:document.querySelectorAll('#guideFont option').length
   }));
   assert(guideUI.intents>=8,'chart-guide: intent selector missing');
   assert(guideUI.recommend>=3,'chart-guide: recommendations missing');
@@ -330,6 +331,7 @@ try{
   assert(guideUI.hasWorkbenchLink,'chart-guide: workbench handoff link missing');
   assert(guideUI.active==='compare','chart-guide: compare intent did not activate');
   assert(guideUI.nav.includes('工作台')&&guideUI.nav.includes('圖表指南')&&guideUI.nav.includes('研究工作室'),'chart-guide: three-way navigation missing');
+  assert(guideUI.fontOptions===5,'chart-guide: expected five font choices');
   await assertNoBodyOverflow(guide,'chart-guide',8);
   await screenshot(guide.locator('.page'),'chart-guide.png');
   guideCheck();
@@ -559,9 +561,9 @@ try{
   const handbook=await context.newPage(),handbookCheck=await attachDiagnostics(handbook,'handbook');
   await handbook.goto(BASE+'/guides/chart-handbook/index.html',{waitUntil:'domcontentloaded'});
   await handbook.waitForFunction(()=>document.querySelector('#count')?.textContent.includes('100 / 100'),null,{timeout:10000});
-  const handbookAppearance=await handbook.evaluate(()=>({colors:document.querySelectorAll('#handbookAppearance .color-chip').length,fonts:document.querySelectorAll('#handbookAppearance .font-select option').length}));
-  assert(handbookAppearance.colors===20,'handbook: expected restored 20-color appearance control');
+  const handbookAppearance=await handbook.evaluate(()=>({fonts:document.querySelectorAll('#guideFont option').length,nav:[...document.querySelectorAll('header .nav a')].map(a=>a.textContent.trim())}));
   assert(handbookAppearance.fonts===5,'handbook: expected five font choices');
+  assert(handbookAppearance.nav.includes('工作台')&&handbookAppearance.nav.includes('圖表指南')&&handbookAppearance.nav.includes('研究工作室'),'handbook: three-way navigation missing');
   await assertNoBodyOverflow(handbook,'handbook',8);
   await screenshot(handbook.locator('main'),'handbook.png');
   handbookCheck();
