@@ -6,4 +6,4 @@ if ! command -v python3 >/dev/null 2>&1; then
   read -r -p "按 Enter 關閉…"
   exit 1
 fi
-python3 tools/local_server.py "$@"
+python3 tools/local_server.py --port 4173 "$@"
