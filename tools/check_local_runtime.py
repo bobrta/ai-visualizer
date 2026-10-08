@@ -3,9 +3,19 @@ from __future__ import annotations
 import functools
 import http.server
 import pathlib
+import sys
 import threading
 import time
 import urllib.request
+
+def _utf8_console() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
+_utf8_console()
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 VENDOR = ROOT / "assets" / "vendor"
