@@ -73,7 +73,7 @@
   host.querySelector('#researchCollapse').onclick=()=>{host.classList.toggle('collapsed');host.querySelector('#researchCollapse').textContent=host.classList.contains('collapsed')?'展開':'收合';};
   function visible(mode){host.hidden=mode!=='research';}
   window.addEventListener('vc-work-mode-change',e=>visible(e.detail?.mode));
-  const advisor=$('chartAdvisor');advisor?.insertAdjacentElement('afterend',host);
+  const advanced=$('workflowAdvancedBody');if(advanced)advanced.append(host);else{const advisor=$('chartAdvisor');advisor?.insertAdjacentElement('afterend',host);}
   render();visible(window.VCTemplateLibrary?.getMode?.()||'business');
   window.VCResearchWorkspace={steps:STEPS,getData:()=>structuredClone(data)};
 })();
