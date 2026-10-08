@@ -201,7 +201,7 @@ jobs:
 
       - name: Start static server
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/visual-canvas-server.log 2>&1 &
+          python3 tools/local_server.py --no-browser --port 4173 > /tmp/visual-canvas-server.log 2>&1 &
           echo $! > /tmp/visual-canvas-server.pid
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
