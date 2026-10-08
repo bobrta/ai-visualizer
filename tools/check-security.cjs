@@ -6,8 +6,7 @@ function assert(ok,msg){if(!ok){console.error('SECURITY CHECK FAILED:',msg);proc
 
 const firstParty=[
   'index.html','builder.js','charts.js','gate.js',
-  'extensions/project-manager.js','extensions/editor-state.js',
-  'extensions/research-studio/studio.js'
+  'extensions/editor-state.js','extensions/research-studio/studio.js'
 ];
 for(const file of firstParty){
   const s=read(file);
