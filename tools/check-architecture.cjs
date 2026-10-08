@@ -14,7 +14,10 @@ function refs(htmlPath){
 
 for(const entry of ['index.html','guides/chart-handbook/index.html','extensions/research-studio/index.html']){
   assert(fs.existsSync(entry),entry+' missing');
-  for(const ref of refs(entry))assert(fs.existsSync(ref),entry+' references missing script '+ref);
+  for(const ref of refs(entry)){
+    assert(fs.existsSync(ref),entry+' references missing script '+ref);
+    assert(!ref.startsWith('legacy'+path.sep),entry+' must not import legacy code: '+ref);
+  }
 }
 
 const main=read('index.html');
@@ -33,4 +36,5 @@ for(const required of [
   'extensions/research-studio/studio.js'
 ]) assert(researchRefs.has(required),'Research Studio missing '+required);
 
-console.log('PASS: entry-point dependencies and active UI architecture are consistent.');
+assert(fs.existsSync('legacy/ui-experiments/README.md'),'legacy archive README missing');
+console.log('PASS: entry-point dependencies, legacy isolation and active UI architecture are consistent.');
