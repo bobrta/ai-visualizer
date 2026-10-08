@@ -63,10 +63,7 @@
     if(cat.value!==category){cat.value=category;fillQuick(category,type);}
     else if([...pick.options].some(o=>o.value===type))pick.value=type;
   }
-  cat.onchange=()=>{
-    fillQuick(cat.value);
-    if(pick.value)window.VCApplyTemplate?.(pick.value);
-  };
+  cat.onchange=()=>{fillQuick(cat.value);};
   pick.onchange=()=>window.VCApplyTemplate?.(pick.value);
   window.addEventListener('vc-template-applied',e=>syncQuick(e.detail?.type));
 
