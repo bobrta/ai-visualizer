@@ -80,8 +80,7 @@ async function mainChart(page,type,file){
 async function researchDiagram(context,id,engine,file){
   const page=await context.newPage(),check=await attachDiagnostics(page,'research:'+id);
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
-  if(id==='why'){
+    if(id==='why'){
     const fontOptions=await page.locator('#appearance .font-select option').count();
     assert(fontOptions===5,'research: expected five font choices');
     await page.selectOption('#appearance .font-select','ming');
@@ -168,8 +167,7 @@ async function researchDiagram(context,id,engine,file){
 async function researchDenseDiagram(context,id,file){
   const page=await context.newPage(),check=await attachDiagnostics(page,'research:dense:'+id);
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=${encodeURIComponent(id)}`,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
-  await page.evaluate(kind=>{
+    await page.evaluate(kind=>{
     const input=document.querySelector('#json'),d=JSON.parse(input.value);
     if(kind==='concept'){
       d.data={
@@ -237,8 +235,7 @@ async function researchDenseDiagram(context,id,file){
 async function researchGantt(context){
   const page=await context.newPage(),check=await attachDiagnostics(page,'research:gantt');
   await page.goto(`${BASE}/extensions/research-studio/index.html?template=gantt`,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
-  assert(await page.evaluate(()=>Boolean(window.VCResearchLayout)),'gantt: Research Figure Layout engine missing');
+    assert(await page.evaluate(()=>Boolean(window.VCResearchLayout)),'gantt: Research Figure Layout engine missing');
   const planned=await page.evaluate(()=>{
     const d=JSON.parse(document.querySelector('#json').value);
     const [w,h]=document.querySelector('#size').value.split(',').map(Number);
@@ -289,12 +286,10 @@ const browser=await chromium.launch({headless:false,args:['--use-gl=swiftshader'
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
   await context.route(/https:\/\/cdn\.plot\.ly\/plotly-[^/]+\.min\.js/,route=>route.fulfill({status:200,contentType:'application/javascript',body:LOCAL_PLOTLY}));
-  await context.addInitScript(hash=>{try{sessionStorage.setItem('visual-gate-session',hash);}catch{}},gateHash);
 
   const main=await context.newPage(),mainCheck=await attachDiagnostics(main,'main');
   await main.goto(BASE+'/',{waitUntil:'domcontentloaded'});
-  await main.waitForFunction(()=>!document.body.classList.contains('locked'),null,{timeout:10000});
-  await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
+    await main.addScriptTag({content:LOCAL_PLOTLY.toString('utf8')});
   assert(await main.evaluate(()=>Boolean(window.Plotly?.newPlot)),'main: local Plotly injection failed');
   await main.waitForSelector('#templates',{state:'visible',timeout:5000});
   await main.click('#templates');
