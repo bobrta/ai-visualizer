@@ -30,8 +30,6 @@ jobs:
           files=(
             builder.js
             charts.js
-            gate.js
-            gate-config.js
             extensions/editor-state.js
             extensions/diagram-engine.js
             extensions/diagram-network-p1.js
@@ -83,6 +81,10 @@ jobs:
         run: node tools/check-business-time.cjs
       - name: Check PDF
         run: node tools/check-pdf.cjs
+      - name: Install DOM integration test dependency
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check editor recovery and PDF state
+        run: npm run test:editor
       - name: Check typography
         run: node tools/check-typography.cjs
       - name: Check presentation design system
@@ -211,6 +213,11 @@ jobs:
         env:
           VC_BASE_URL: http://127.0.0.1:4173
         run: xvfb-run -a --server-args="-screen 0 1440x900x24" npm run test:visual
+      - name: Verify current editor PDF download in Chromium
+        env:
+          VC_BASE_URL: http://127.0.0.1:4173
+          VC_HEADLESS: '1'
+        run: xvfb-run -a npm run test:editor:browser
 
       - name: Upload visual screenshots
         if: always()

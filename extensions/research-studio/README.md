@@ -1,6 +1,6 @@
 # Research Studio｜獨立研究擴充
 
-入口：`extensions/research-studio/index.html`。使用主程式同一個前端便利密碼，不提供真正的伺服器認證。
+入口：`extensions/research-studio/index.html`。直接開啟，不需輸入密碼。
 
 此資料夾在獨立頁面執行，不載入主程式 charts.js/builder.js，也不修改原本 30 種 JSON 格式。新增引擎只在此頁按「產生圖形」時載入。主頁只增加入口及可移除的專業外觀層。
 

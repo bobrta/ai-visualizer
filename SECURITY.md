@@ -7,7 +7,7 @@ Visual Canvas is a static, local-first browser application. It does not provide 
 - Recommended runtime: `http://127.0.0.1:4173` through `tools/local_server.py`.
 - The local server binds only to `127.0.0.1`, not the LAN.
 - Chart/project data is stored in browser `localStorage` unless explicitly exported.
-- The password screen is a convenience gate only. Its hash and salt are public client assets and it can be bypassed by someone with file access.
+- All interfaces open directly. No authentication or confidential server storage is provided.
 - Plotly, ECharts and Mermaid are fixed-version third-party dependencies. Offline setup verifies downloaded bundles before installing them.
 
 ## Data safety
