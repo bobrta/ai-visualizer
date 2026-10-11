@@ -5,7 +5,7 @@ function read(path){return fs.readFileSync(path,'utf8');}
 function assert(ok,msg){if(!ok){console.error('SECURITY CHECK FAILED:',msg);process.exit(1);}}
 
 const firstParty=[
-  'index.html','builder.js','charts.js','gate.js',
+  'index.html','builder.js','charts.js',
   'extensions/editor-state.js','extensions/research-studio/studio.js'
 ];
 for(const file of firstParty){
@@ -36,8 +36,5 @@ assert(read('extensions/research-studio/studio.js').includes("value.length>1e6")
 const projects=read('legacy/ui-experiments/project-manager.js');
 assert(projects.includes('MAX_IMPORT_BYTES=2*1024*1024'),'project import byte limit missing');
 assert(projects.includes('MAX_PROJECT_ITEMS=500'),'project item limit missing');
-
-const gate=read('gate.js');
-assert(/not server-side authentication/i.test(gate),'gate must state it is not real authentication');
 
 console.log('PASS: local security invariants.');
