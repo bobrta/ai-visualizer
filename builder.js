@@ -21,6 +21,64 @@ $('chartType').onchange=()=>{try{applyTemplate($('chartType').value);}catch(e){$
 window.VCApplyTemplate=applyTemplate;
 $('fillMode').onclick=()=>{try{const d=JSON.parse($('input').value);if(d.schema_version==='1.0'){const n=normalize(d);const newer={type:'mindmap',title:n.title,branches:n.children.map(output)};fillForm(newer);}else fillForm(d);showMode(true);}catch(e){$('status').textContent='請先套用架構或貼入有效指令。';}};
 $('codeMode').onclick=()=>{try{if(formMode)$('input').value=JSON.stringify(collectForm(),null,2);showMode(false);}catch(e){$('status').textContent=e.message;}};
+
+function cleanPastedJSON(raw){
+  let text=String(raw||'').replace(/^\uFEFF/,'').trim();
+  const fenced=text.match(/^\`\`\`(?:json)?\s*([\s\S]*?)\s*\`\`\`$/i);
+  if(fenced)text=fenced[1].trim();
+  return text;
+}
+function syncTypeFromCommand(data){
+  const type=data?.schema_version==='1.0'?'mindmap':data?.type;
+  if(type&&CHARTS.some(([id])=>id===type))$('chartType').value=type;
+  return type;
+}
+let liveRenderTimer=null;
+function queueLiveRender(source){
+  clearTimeout(liveRenderTimer);
+  liveRenderTimer=setTimeout(()=>{
+    try{
+      if(source==='code'){
+        const cleaned=cleanPastedJSON($('input').value);
+        if(cleaned!==$('input').value)$('input').value=cleaned;
+        const data=JSON.parse(cleaned);
+        const type=syncTypeFromCommand(data);
+        if(!type)throw Error('缺少 type。');
+      }else if(source==='form'){
+        $('input').value=JSON.stringify(collectForm(),null,2);
+      }
+      $('generate').click();
+    }catch(e){
+      // During normal typing a JSON/object field can be temporarily incomplete.
+      // Keep the last valid preview and wait for the next valid edit.
+      if(source==='code')$('status').textContent='JSON 尚未完整；完成後會自動更新。';
+    }
+  },source==='code'?500:320);
+}
+$('input').addEventListener('input',()=>{
+  if(!formMode)queueLiveRender('code');
+});
+$('input').addEventListener('paste',()=>{
+  setTimeout(()=>{
+    try{
+      const cleaned=cleanPastedJSON($('input').value);
+      if(cleaned!==$('input').value)$('input').value=cleaned;
+      const data=JSON.parse(cleaned);
+      const type=syncTypeFromCommand(data);
+      if(!type)throw Error('缺少 type。');
+      clearTimeout(liveRenderTimer);
+      $('status').textContent='已讀取 JSON，正在產生圖形…';
+      $('generate').click();
+    }catch(e){
+      $('status').textContent='貼上內容不是可用的 JSON：'+e.message;
+    }
+  },0);
+});
+$('formPanel').addEventListener('input',()=>queueLiveRender('form'));
+$('formPanel').addEventListener('change',()=>queueLiveRender('form'));
+for(const id of ['reportX','reportY','reportCaption','reportSource']){
+  $(id)?.addEventListener('input',()=>queueLiveRender(formMode?'form':'code'));
+}
 $('templates').onclick=()=>$('library').showModal();$('closeLibrary').onclick=()=>$('library').close();
 for(const [type,name]of CHARTS){const card=document.createElement('button');card.className='template-card';card.type='button';const title=document.createElement('strong');title.textContent=name;const subtitle=document.createElement('small');const learning=window.VC_LEARNING_TEMPLATES?.find(t=>t.id===type);subtitle.textContent=learning?learning.desc+' · '+type:type+' · 點選套用架構';card.append(title,subtitle);card.onclick=()=>applyTemplate(type);$('templateGrid').append(card);}
 async function clipboard(text){try{await navigator.clipboard.writeText(text);$('status').textContent='已複製。';}catch{$('input').value=text;showMode(false);$('input').focus();$('input').select();$('status').textContent='瀏覽器未允許自動複製；文字已選取，請按 Ctrl+C／⌘C。';}}

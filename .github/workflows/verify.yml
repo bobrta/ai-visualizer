@@ -30,8 +30,6 @@ jobs:
           files=(
             builder.js
             charts.js
-            gate.js
-            gate-config.js
             extensions/editor-state.js
             extensions/diagram-engine.js
             extensions/diagram-network-p1.js

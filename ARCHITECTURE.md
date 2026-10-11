@@ -20,7 +20,6 @@ Active layers:
 - quality: `chart-guardrails.js`, `smart-layout.js`, `auto-insight.js`, `annotation-layout.js`, `accessibility.js`, `emphasis.js`, `legend-intelligence.js`, `executive-*.js`
 - persistence: `editor-state.js`
 - export: `pdf-export.js`
-- convenience gate: `gate.js` / `gate-config.js`
 
 ## 2. Chart Guide
 
