@@ -26,7 +26,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  ok(await page.evaluate(()=>VCTypography.multiplier===1),'undo restores typography multiplier');
  await page.evaluate(()=>VCApplyTemplate('bar'));await page.click('#generate');await page.waitForFunction(()=>window.VCRenderValid===true);
  ok(await page.locator('#plot .plot-container').count()===1,'real Plotly render');
- await page.locator('#reportSource').fill('測試來源');await page.click('#generate');await page.waitForFunction(()=>window.VCRenderValid===true);
+ await page.locator('details').nth(1).locator('summary').click();await page.locator('#reportSource').fill('測試來源');await page.click('#generate');await page.waitForFunction(()=>window.VCRenderValid===true);
  ok(await page.evaluate(()=>chartData.report.source)==='測試來源','report control edits render');
  const downloadPromise=page.waitForEvent('download');await page.click('#export');const download=await downloadPromise;await download.saveAs('/tmp/visual-chart.svg');
  ok(fs.readFileSync('/tmp/visual-chart.svg','utf8').includes('<svg'),'SVG export valid');
