@@ -27,7 +27,7 @@ function pdfBytes(jpeg,width,height,pagePoints){
 function decodeJpeg(url){const raw=atob(url.split(',')[1]),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function download(blob,filename){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),600000);return url;}
 async function exportPDF({title='Visual Canvas 圖表',subtitle='',image,caption='',source='',showTitle=true,filename,downloadFile=true,pageFormat='a4_landscape'}={}){
- if(typeof image!=='string'||!/^data:image\/(svg\+xml|png|jpeg);/i.test(image))throw Error('請先產生圖形，再下載 PDF。');
+ if(typeof image!=='string'||!/^data:image\/(?:svg\+xml|png|jpeg)(?:;[^,]*)?,/i.test(image))throw Error('請先產生圖形，再下載 PDF。');
  const preset=PAGE_FORMATS[pageFormat]||PAGE_FORMATS.a4_landscape;
  const img=new Image();await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('圖形轉換逾時，請重新產生後重試。')),20000);img.onload=()=>{clearTimeout(timer);resolve();};img.onerror=()=>{clearTimeout(timer);reject(Error('圖形讀取失敗，請重新產生或先下載 PNG。'));};img.src=image;});
  if(!img.naturalWidth||!img.naturalHeight)throw Error('圖形尺寸無效。');
