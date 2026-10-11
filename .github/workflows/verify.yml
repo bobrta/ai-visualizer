@@ -30,8 +30,6 @@ jobs:
           files=(
             builder.js
             charts.js
-            gate.js
-            gate-config.js
             extensions/editor-state.js
             extensions/diagram-engine.js
             extensions/diagram-network-p1.js
@@ -83,6 +81,8 @@ jobs:
         run: node tools/check-business-time.cjs
       - name: Check PDF
         run: node tools/check-pdf.cjs
+      - name: Check editor recovery and PDF state
+        run: npm run test:editor
       - name: Check typography
         run: node tools/check-typography.cjs
       - name: Check presentation design system
