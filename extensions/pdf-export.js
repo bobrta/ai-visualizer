@@ -26,7 +26,7 @@ function pdfBytes(jpeg,width,height,pagePoints){
 }
 function decodeJpeg(url){const raw=atob(url.split(',')[1]),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function download(blob,filename){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),600000);return url;}
-async function exportPDF({title='Visual Canvas 圖表',subtitle='',image,caption='',source='',showTitle=true,filename,downloadFile=true,pageFormat='a4_landscape'}={}){
+async function exportPDF({title='Visual Canvas 圖表',subtitle='',image,caption='',source='',showTitle=false,imageScale=1.15,filename,downloadFile=true,pageFormat='a4_landscape'}={}){
  if(typeof image!=='string'||!/^data:image\/(?:svg\+xml|png|jpeg)(?:;[^,]*)?,/i.test(image))throw Error('請先產生圖形，再下載 PDF。');
  const preset=PAGE_FORMATS[pageFormat]||PAGE_FORMATS.a4_landscape;
  const img=new Image();await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('圖形轉換逾時，請重新產生後重試。')),20000);img.onload=()=>{clearTimeout(timer);resolve();};img.onerror=()=>{clearTimeout(timer);reject(Error('圖形讀取失敗，請重新產生或先下載 PNG。'));};img.src=image;});
@@ -41,12 +41,13 @@ async function exportPDF({title='Visual Canvas 圖表',subtitle='',image,caption
  const footnotes=[caption,source?('資料來源：'+source):''].filter(Boolean);
  const bottomReserve=footnotes.length?Math.min(Math.round(canvas.height*.20),Math.max(100,footnotes.join('').length*1.1+footSize*3)):0;
  const areaHeight=canvas.height-pad-top-bottomReserve;
+ const zoom=Math.max(.7,Math.min(1.6,Number(imageScale)||1));
  const ratio=Math.min(available/img.naturalWidth,areaHeight/img.naturalHeight);if(!Number.isFinite(ratio)||ratio<=0)throw Error('PDF 文字過多，請縮短標題或圖說。');
- const w=img.naturalWidth*ratio,h=img.naturalHeight*ratio;g.drawImage(img,pad+(available-w)/2,top+(areaHeight-h)/2,w,h);
+ const w=img.naturalWidth*ratio*zoom,h=img.naturalHeight*ratio*zoom;g.drawImage(img,pad+(available-w)/2,top+(areaHeight-h)/2,w,h);
  top=canvas.height-pad-bottomReserve;for(const note of footnotes)textBlock(note,footSize,'#475569',5);
  let jpeg;try{jpeg=decodeJpeg(canvas.toDataURL('image/jpeg',.985));}catch{throw Error('圖片無法轉成 PDF，請確認圖形不含外部圖片。');}
  const bytes=pdfBytes(jpeg,canvas.width,canvas.height,preset.points),blob=new Blob([bytes],{type:'application/pdf'}),name=(filename||String(title||'chart').slice(0,80)).replace(/[\\/:*?"<>|\x00-\x1f]/g,'-').replace(/\.pdf$/i,'')+'.pdf';
- const downloadURL=downloadFile?download(blob,name):null;return {blob,filename:name,bytes:bytes.length,downloadURL,pageFormat,label:preset.label};
+ const downloadURL=downloadFile?download(blob,name):null;return {blob,filename:name,bytes:bytes.length,downloadURL,pageFormat,label:preset.label,imageScale:zoom};
 }
 exportPDF.encode=pdfBytes;exportPDF.formats=PAGE_FORMATS;window.VCPdfExport=exportPDF;
 })();

@@ -9,7 +9,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  const ok=(v,msg)=>{assert(v,msg);checks++;};
  try{
  await page.goto(base);await page.waitForTimeout(400);
- ok(await page.locator('#gate').count()===0,'main password markup removed');ok(await page.locator('#templates').isVisible(),'direct workbench entry');
+ ok(await page.locator('#gate').count()===0,'main password markup removed');ok(await page.locator('#templates').isVisible(),'direct workbench entry');ok(await page.locator('#pdfImageScale').inputValue()==='115','PDF defaults to a larger diagram');ok(await page.locator('#pdfShowTitle').isChecked()===false,'PDF avoids duplicating the diagram title');ok((await page.locator('label').filter({has:page.locator('#textScale')}).innerText()).includes('匯出也會套用'),'text sizing control documents export behavior');await page.locator('#pdfImageScale').evaluate(e=>{e.value='130';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));});ok(await page.locator('#pdfImageScaleValue').textContent()==='130%','PDF zoom label updates');ok(await page.evaluate(()=>localStorage.getItem('visual-canvas-pdf-image-scale-v1'))==='130','PDF zoom persists');
  await page.click('#generate');ok(await page.evaluate(()=>window.VCRenderValid),'mindmap generation succeeds');
  await page.evaluate(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:()=>Promise.reject(Error('denied'))},configurable:true});});
  const old=await page.locator('#input').inputValue();await page.click('#copyPrompt');await page.waitForSelector('#clipboardFallback[open]');
