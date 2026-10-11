@@ -81,6 +81,8 @@ jobs:
         run: node tools/check-business-time.cjs
       - name: Check PDF
         run: node tools/check-pdf.cjs
+      - name: Install DOM integration test dependency
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Check editor recovery and PDF state
         run: npm run test:editor
       - name: Check typography
