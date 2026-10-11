@@ -311,6 +311,19 @@ try{
   assert(workbenchUI.status.includes('已切換到'),'main: chart switch status missing');
   assert(workbenchUI.fontCount===5&&workbenchUI.fontOptions===5,'main: expected five font choices');
   assert(workbenchUI.nav.includes('工作台')&&workbenchUI.nav.includes('圖表指南')&&workbenchUI.nav.includes('研究工作室'),'main: three-way navigation missing');
+  await main.click('#codeMode');
+  const pasted={type:'bar',title:'JSON 貼上回歸測試',x:['A','B'],y:[1,2]};
+  await main.fill('#input',JSON.stringify(pasted));
+  await main.dispatchEvent('#input','paste');
+  await main.waitForFunction(()=>document.querySelector('#plot')?.data?.[0]?.type==='bar'&&(document.querySelector('#status')?.textContent||'').includes('已產生'),null,{timeout:8000});
+  const pasteUI=await main.evaluate(()=>({
+    type:document.querySelector('#chartType')?.value||'',
+    title:document.querySelector('#plot')?.layout?.title?.text||'',
+    status:document.querySelector('#status')?.textContent||''
+  }));
+  assert(pasteUI.type==='bar','main: pasted JSON did not sync chart type');
+  assert(String(pasteUI.title).includes('JSON 貼上回歸測試'),'main: pasted JSON did not render');
+
   await main.selectOption('#appearance .font-select','ming');
   await main.evaluate(()=>window.VCApplyTemplate?.('bar'));
   await main.click('#generate');
