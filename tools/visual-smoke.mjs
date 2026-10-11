@@ -92,6 +92,13 @@ async function researchDiagram(context,id,engine,file){
   const researchDiag=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,kind:document.querySelector('#kindName')?.textContent,selected:[...document.querySelectorAll('.catalog-item.active')].map(n=>n.dataset.id),svgEngine:document.querySelector('#stage svg')?.dataset.engine||'',svgCount:document.querySelectorAll('#stage svg').length,nav:[...document.querySelectorAll('header .studio-nav a')].map(a=>a.textContent.trim())}));
   console.log('RESEARCH-DIAG',id,JSON.stringify(researchDiag));
   assert(researchDiag.nav.includes('工作台')&&researchDiag.nav.includes('圖表指南')&&researchDiag.nav.includes('研究工作室'),id+': three-way navigation missing');
+  if(id==='errorbar'){
+    await page.fill('#title','研究文字即時更新測試');
+    await page.waitForFunction(()=>document.querySelector('#figureTitle')?.textContent==='研究文字即時更新測試',null,{timeout:8000});
+    const liveDoc=await page.evaluate(()=>{const d=JSON.parse(document.querySelector('#json').value);d.title='研究 JSON 貼上更新測試';return JSON.stringify(d);});
+    await page.evaluate(text=>{const el=document.querySelector('#json');el.value=text;el.dispatchEvent(new Event('paste',{bubbles:true}));},liveDoc);
+    await page.waitForFunction(()=>document.querySelector('#figureTitle')?.textContent==='研究 JSON 貼上更新測試',null,{timeout:8000});
+  }
   if(id==='why'){
     const fontApplied=await page.evaluate(()=>({state:window.VCStyle?.state?.().font||'',paper:getComputedStyle(document.querySelector('#paper')).fontFamily}));
     assert(fontApplied.state==='ming','research: font selector did not update shared style state');
@@ -313,16 +320,18 @@ try{
   assert(workbenchUI.nav.includes('工作台')&&workbenchUI.nav.includes('圖表指南')&&workbenchUI.nav.includes('研究工作室'),'main: three-way navigation missing');
   await main.click('#codeMode');
   const pasted={type:'bar',title:'JSON 貼上回歸測試',x:['A','B'],y:[1,2]};
-  await main.fill('#input',JSON.stringify(pasted));
-  await main.dispatchEvent('#input','paste');
-  await main.waitForFunction(()=>document.querySelector('#plot')?.data?.[0]?.type==='bar'&&(document.querySelector('#status')?.textContent||'').includes('已產生'),null,{timeout:8000});
+  await main.evaluate(text=>{const el=document.querySelector('#input');el.value=text;el.dispatchEvent(new Event('paste',{bubbles:true}));},JSON.stringify(pasted));
+  await main.waitForFunction(()=>document.querySelector('#plot')?.data?.[0]?.type==='bar'&&String(document.querySelector('#plot')?.layout?.title?.text||'').includes('JSON 貼上回歸測試'),null,{timeout:8000});
   const pasteUI=await main.evaluate(()=>({
     type:document.querySelector('#chartType')?.value||'',
-    title:document.querySelector('#plot')?.layout?.title?.text||'',
-    status:document.querySelector('#status')?.textContent||''
+    title:document.querySelector('#plot')?.layout?.title?.text||''
   }));
   assert(pasteUI.type==='bar','main: pasted JSON did not sync chart type');
   assert(String(pasteUI.title).includes('JSON 貼上回歸測試'),'main: pasted JSON did not render');
+  await main.click('#fillMode');
+  const titleField=main.locator('#fields input[aria-label="圖形標題"]');
+  await titleField.fill('文字輸入即時更新測試');
+  await main.waitForFunction(()=>String(document.querySelector('#plot')?.layout?.title?.text||'').includes('文字輸入即時更新測試'),null,{timeout:8000});
 
   await main.selectOption('#appearance .font-select','ming');
   await main.evaluate(()=>window.VCApplyTemplate?.('bar'));
