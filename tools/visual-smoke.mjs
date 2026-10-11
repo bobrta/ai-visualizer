@@ -7,9 +7,6 @@ const BASE=process.env.VC_BASE_URL||'http://127.0.0.1:4173';
 const OUT=path.join(ROOT,'artifacts','visual');
 fs.mkdirSync(OUT,{recursive:true});
 const LOCAL_PLOTLY=fs.readFileSync(path.join(ROOT,'node_modules','plotly.js-dist-min','plotly.min.js'));
-const gateSource=fs.readFileSync(path.join(ROOT,'gate-config.js'),'utf8');
-const gateHash=gateSource.match(/"hash"\s*:\s*"([^"]+)"/)?.[1];
-if(!gateHash)throw new Error('Unable to read frontend gate hash for browser tests.');
 
 function assert(value,message){if(!value)throw new Error(message);}
 async function attachDiagnostics(page,name){
@@ -278,11 +275,11 @@ async function researchGantt(context){
   await page.close();
 }
 
-const browser=await chromium.launch({headless:false,args:['--use-gl=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
+const browser=await chromium.launch({headless:process.env.VC_HEADLESS==='1',...(process.env.VC_BROWSER_PATH?{executablePath:process.env.VC_BROWSER_PATH}:{}),args:['--use-gl=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
   await context.route(/https:\/\/cdn\.plot\.ly\/plotly-[^/]+\.min\.js/,route=>route.fulfill({status:200,contentType:'application/javascript',body:LOCAL_PLOTLY}));
-  await context.addInitScript(hash=>{try{sessionStorage.setItem('visual-gate-session',hash);}catch{}},gateHash);
+
 
   const main=await context.newPage(),mainCheck=await attachDiagnostics(main,'main');
   await main.goto(BASE+'/',{waitUntil:'domcontentloaded'});
