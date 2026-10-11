@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.VC_BROWSER_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  const context=await browser.newContext({viewport:{width:1440,height:900},acceptDownloads:true});
- const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
  await context.route('**/assets/vendor/plotly-4.1.1.min.js',r=>r.fulfill({contentType:'application/javascript',body:fs.readFileSync('node_modules/plotly.js-dist-min/plotly.min.js')}));
  const base=process.env.VC_BASE_URL||'http://127.0.0.1:4173';let checks=0;
  const ok=(v,msg)=>{assert(v,msg);checks++;};
@@ -31,7 +31,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  const downloadPromise=page.waitForEvent('download');await page.click('#export');const download=await downloadPromise;await download.saveAs('/tmp/visual-chart.svg');
  ok(fs.readFileSync('/tmp/visual-chart.svg','utf8').includes('<svg'),'SVG export valid');
  ok((await page.locator('#status').textContent()).includes('A4 橫式'),'default output label matches documented PDF size');
- ok(await page.locator('#pdfPageFormat option').count()===5,'all PDF output sizes selectable');const pdfPromise=page.waitForEvent('download');await page.click('#pdfExport');const pdfDownload=await pdfPromise;const pdfPath=await pdfDownload.path();
+ ok(await page.locator('#pdfPageFormat option').count()===5,'all PDF output sizes selectable');const pdfPromise=page.waitForEvent('download',{timeout:10000}).catch(()=>null);await page.click('#pdfExport');const pdfDownload=await pdfPromise;if(!pdfDownload){const status=await page.locator('#status').innerText();throw Error('bar PDF export produced no browser download; status='+JSON.stringify(status)+'; errors='+JSON.stringify(errors));}const pdfPath=await pdfDownload.path();
  const pdf=fs.readFileSync(pdfPath);const pdfText=pdf.toString('latin1');ok(pdfText.startsWith('%PDF-1.4'),'real Chromium PDF export creates a PDF file');
  ok(pdfDownload.suggestedFilename().endsWith('.pdf'),'PDF download has extension');ok(pdfText.includes('/MediaBox [0 0 841.89 595.28]'),'PDF page is A4 landscape');
  await page.evaluate(()=>VCApplyTemplate('mindmap'));await page.click('#generate');await page.waitForFunction(()=>window.VCRenderValid);
