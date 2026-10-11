@@ -24,7 +24,7 @@ function click(w,id){w.document.getElementById(id).click();}
 function input(w,id,value){const e=w.document.getElementById(id);e.value=value;e.dispatchEvent(new w.Event('input',{bubbles:true}));}
 (async()=>{
  let {dom,w,errors}=await open();const $=id=>w.document.getElementById(id);
- ok(!$('gate')&&!$('lockApp'),'main has no password or lock');ok(!w.document.body.classList.contains('locked'),'main direct entry');
+ ok(!$('gate')&&!$('lockApp'),'main has no password or lock');ok($('pdfPageFormat').options.length===5,'five visible PDF page formats');ok(!w.document.body.classList.contains('locked'),'main direct entry');
  click(w,'generate');await sleep(50);ok(w.VCRenderValid,'mindmap completes');
  const original=$('input').value;Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async()=>{throw Error('denied');}}});click(w,'copyPrompt');await sleep(20);
  ok($('input').value===original,'clipboard denial leaves editor intact');ok($('clipboardFallback').open,'separate copy dialog');$('clipboardFallback').close();
@@ -36,8 +36,8 @@ function input(w,id,value){const e=w.document.getElementById(id);e.value=value;e
  $('textScale').value='1.3';$('textScale').dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(30);await w.VCEditorState.undo();ok(w.VCTypography.multiplier===1,'undo restores actual typography');
  w.VCApplyTemplate('bar');click(w,'generate');await sleep(50);ok(w.VCRenderValid&&$('plot').data.length>0,'Plotly configuration submitted (engine mocked)');
  input(w,'reportSource','測試來源');click(w,'generate');await sleep(50);ok(w.eval('chartData.report.source')==='測試來源','report field input reaches render');
- click(w,'export');await sleep(50);ok($('status').textContent.includes('16:9 簡報')&&!$('status').textContent.includes('undefined'),'export label defined');
- w.VCApplyTemplate('mindmap');ok($('reportSource').value==='','template resets report');click(w,'export');await sleep(20);ok($('status').textContent.includes('請先成功產生'),'stale export blocked');
+ click(w,'export');await sleep(50);ok($('status').textContent.includes('A4 橫式')&&!$('status').textContent.includes('undefined'),'default output label aligns with PDF guide');$('pdfPageFormat').value='slide_16_9';$('pdfPageFormat').dispatchEvent(new w.Event('change',{bubbles:true}));ok(w.localStorage.getItem('visual-canvas-output-format-v1')==='slide_16_9','output format persists');
+ w.VCApplyTemplate('mindmap');ok($('reportSource').value==='','template resets report');ok($('pdfPageFormat').value==='slide_16_9','template leaves output format');click(w,'export');await sleep(20);ok($('status').textContent.includes('請先成功產生'),'stale export blocked');
  click(w,'codeMode');input(w,'input',JSON.stringify({type:'mindmap',title:'x'.repeat(201),branches:[]}));click(w,'generate');await sleep(20);ok($('status').textContent.includes('1–200'),'root limit');ok(!w.VCRenderValid,'failed render invalidates export');
  input(w,'input',JSON.stringify({type:'mindmap',title:'根',custom:'keep',description:'note',branches:[{title:'分支',children:[{title:'葉'}]}]}));click(w,'generate');await sleep(20);w.eval('sync()');ok(JSON.parse($('input').value).custom==='keep','node sync keeps command metadata');ok($('scene').querySelector('[aria-expanded][tabindex="0"]'),'keyboard branch control');
  w.VCApplyTemplate('bar');ok(!w.document.querySelector('#fields label label'),'no nested labels');

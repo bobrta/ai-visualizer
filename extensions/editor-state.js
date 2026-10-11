@@ -10,7 +10,7 @@
     if(data&&typeof data==='object'&&!Array.isArray(data)){reportFields(data);raw=JSON.stringify(data,null,2);}
     return {data,raw,formMode:typeof formMode!=='undefined'&&formMode,chartType:$id('chartType').value,
       report:Object.fromEntries(['reportX','reportY','reportCaption','reportSource'].map(id=>[id,$id(id).value])),
-      textScale:$id('textScale').value,presentation:window.VCStyle?.state(),savedAt:Date.now()};
+      textScale:$id('textScale').value,pdfPageFormat:$id('pdfPageFormat')?.value||'a4_landscape',presentation:window.VCStyle?.state(),savedAt:Date.now()};
   }
   function signature(s){const {savedAt,...value}=s||{};return JSON.stringify(value);}
   function updateButtons(){$id('undoEdit').disabled=historyIndex<=0;$id('redoEdit').disabled=historyIndex>=history.length-1;}
@@ -26,7 +26,7 @@
       const legacy={reportX:'x',reportY:'y',reportCaption:'caption',reportSource:'source'};
       for(const id of Object.keys(legacy))$id(id).value=s.report?.[id]??s.report?.[legacy[id]]??'';
       if(s.presentation){VCStyle.set(s.presentation);appearanceUI?.refresh();colors.splice(0,colors.length,...VCStyle.palette());}
-      $id('textScale').value=s.textScale||'1';await VCTypography.setMultiplier(s.textScale||1);
+      $id('textScale').value=s.textScale||'1';if($id('pdfPageFormat'))$id('pdfPageFormat').value=s.pdfPageFormat||'a4_landscape';await VCTypography.setMultiplier(s.textScale||1);
       if(s.data&&typeof fillForm==='function')fillForm(s.data);
       showMode(Boolean(s.data&&(s.formMode??true)));
       if(render&&s.data)await originalGenerate();else window.VCRenderValid=false;
@@ -51,7 +51,7 @@
     }catch{return false;}
   }
   function clearDraft(){clearTimeout(saveTimer);draftCleared=true;try{localStorage.removeItem(DRAFT_KEY);$id('draftState').textContent='草稿已清除';return true;}catch{$id('draftState').textContent='草稿清除失敗';return false;}}
-  function shouldTrack(t){return t?.matches?.('#input,#fields input,#fields textarea,#fields select,#reportX,#reportY,#reportCaption,#reportSource,#textScale');}
+  function shouldTrack(t){return t?.matches?.('#input,#fields input,#fields textarea,#fields select,#reportX,#reportY,#reportCaption,#reportSource,#textScale,#pdfPageFormat');}
   function changed(){if(restoring)return;window.VCRenderValid=false;queueSave();clearTimeout(historyTimer);historyTimer=setTimeout(pushHistory,300);}
   document.addEventListener('input',e=>{if(shouldTrack(e.target))changed();});
   document.addEventListener('change',e=>{if(shouldTrack(e.target)){changed();pushHistory();}});

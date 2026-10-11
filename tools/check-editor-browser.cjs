@@ -30,7 +30,12 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  ok(await page.evaluate(()=>chartData.report.source)==='測試來源','report control edits render');
  const downloadPromise=page.waitForEvent('download');await page.click('#export');const download=await downloadPromise;await download.saveAs('/tmp/visual-chart.svg');
  ok(fs.readFileSync('/tmp/visual-chart.svg','utf8').includes('<svg'),'SVG export valid');
- ok((await page.locator('#status').textContent()).includes('16:9 簡報'),'export label defined');
+ ok((await page.locator('#status').textContent()).includes('A4 橫式'),'default output label matches documented PDF size');
+ ok(await page.locator('#pdfPageFormat option').count()===5,'all PDF output sizes selectable');const pdfPromise=page.waitForEvent('download');await page.click('#pdfExport');const pdfDownload=await pdfPromise;const pdfPath=await pdfDownload.path();
+ const pdf=fs.readFileSync(pdfPath);const pdfText=pdf.toString('latin1');ok(pdfText.startsWith('%PDF-1.4'),'real Chromium PDF export creates a PDF file');
+ ok(pdfDownload.suggestedFilename().endsWith('.pdf'),'PDF download has extension');ok(pdfText.includes('/MediaBox [0 0 841.89 595.28]'),'PDF page is A4 landscape');
+ await page.evaluate(()=>VCApplyTemplate('mindmap'));await page.click('#generate');await page.waitForFunction(()=>window.VCRenderValid);
+ const mindmapPdfPromise=page.waitForEvent('download');await page.click('#pdfExport');const mindmapPdf=await mindmapPdfPromise;ok((await fs.promises.readFile(await mindmapPdf.path())).subarray(0,8).toString('ascii').startsWith('%PDF-1.4'),'mindmap PDF export works in Chromium');
  await page.evaluate(()=>VCApplyTemplate('mindmap'));ok(await page.locator('#reportSource').inputValue()==='','new template clears old metadata');
  await page.click('#export');ok((await page.locator('#status').textContent()).includes('請先成功產生'),'template change blocks stale export');
  await page.click('#codeMode');await page.locator('#input').fill(JSON.stringify({type:'mindmap',title:'x'.repeat(201),branches:[]}));await page.click('#generate');
